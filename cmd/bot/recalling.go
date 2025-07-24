@@ -1,7 +1,6 @@
 package main
 
 import (
-	"spacedrepetitiongo/box"
 	"spacedrepetitiongo/flashcard"
 	"spacedrepetitiongo/notification"
 	"spacedrepetitiongo/notion"
@@ -24,15 +23,9 @@ func forgetFlashCardAndShowAnother(update tgbotapi.Update, bot telegram.Bot, db 
 		},
 	)
 
-	memorizingNotification := notification.NewMemorizingNotification(
-		box.NewBoxesFromDb(db),
-		flashcard.NewFlashcardsFromDb(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE),
-	)
-	notification.EditExistedMessage(
-		bot,
-		memorizingNotification,
-		*notification.GetSentMessageId(db, memorizingNotification.GetDBTableName()),
-	)
+	notification.
+		NewMemorizingNotificationFromDB(db).
+		EditExistedMessage(bot, db)
 }
 
 func recallFlashCardAndShowAnother(updaet tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
@@ -53,15 +46,10 @@ func updateRevisedFlashCardAndShowAnother(db sqlx.DB, update tgbotapi.Update, bo
 	bot.DeleteMessage(update.CallbackQuery.Message.MessageID)
 	go func() { updatedFlashCard.UpdatePageOnNotion(client) }()
 	sendNewFlashCardToTelegramIfExistsToRevise(db, updatedFlashCard.BoxId, bot)
-	flashCardsToRevise := flashcard.NewFlashcardsFromDb(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE)
 
-	revisingNotification := notification.NewRevisingNotification(box.NewBoxesFromDb(db), flashCardsToRevise)
-	messageId := notification.GetSentMessageId(db, revisingNotification.GetDBTableName())
-	notification.EditExistedMessage(
-		bot,
-		revisingNotification,
-		*messageId,
-	)
+	notification.
+		NewRevisingNotificationFromDB(db).
+		EditExistedMessage(bot, db)
 }
 
 func sendNewFlashCardToTelegramIfExistsToRevise(db sqlx.DB, boxId string, bot telegram.Bot) {

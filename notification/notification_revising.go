@@ -3,7 +3,10 @@ package notification
 import (
 	"spacedrepetitiongo/box"
 	"spacedrepetitiongo/flashcard"
+	"spacedrepetitiongo/telegram"
 	"strconv"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type RevisingNotification struct {
@@ -15,6 +18,13 @@ func NewEmptyRevisingNotification() RevisingNotification {
 	return NewRevisingNotification(
 		[]box.Box{},
 		[]flashcard.Flashcard{},
+	)
+}
+
+func NewRevisingNotificationFromDB(db sqlx.DB) RevisingNotification {
+	return NewRevisingNotification(
+		box.NewBoxesFromDb(db),
+		flashcard.NewFlashcardsFromDb(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE),
 	)
 }
 
@@ -47,4 +57,17 @@ func (revising RevisingNotification) GetFlashCards() []flashcard.Flashcard {
 
 func (revising RevisingNotification) GetDBTableName() string {
 	return "sent_need_revising_notifications"
+}
+
+func (revising RevisingNotification) EditExistedMessage(bot telegram.Bot, db sqlx.DB) {
+	EditExistedMessage(bot, db, revising)
+}
+
+func (revising RevisingNotification) SendNewNotificationAndDeleteOld(db sqlx.DB, bot telegram.Bot) {
+	previouslySentMessageId := GetSentMessageId(db, revising.GetDBTableName())
+	if previouslySentMessageId == nil {
+		SendNewNotification(bot, db, revising)
+	} else {
+		DeleteOldAndSendNewMessageOrEditToDone(bot, revising, db, *previouslySentMessageId)
+	}
 }

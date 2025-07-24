@@ -27,6 +27,6 @@ func main() {
 func createNotifications() []notification.Notification {
 	return []notification.Notification{
 		notification.NewEmptyRevisingNotification(),
-		notification.NewEmptyRevisingNotification(),
+		notification.NewEmptyMemorizingNotification(),
 	}
 }

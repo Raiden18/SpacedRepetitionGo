@@ -1,7 +1,6 @@
 package main
 
 import (
-	"spacedrepetitiongo/box"
 	"spacedrepetitiongo/flashcard"
 	"spacedrepetitiongo/notification"
 	"spacedrepetitiongo/notion"
@@ -21,16 +20,9 @@ func memorizeFlashCardAndShowNext(update tgbotapi.Update, bot telegram.Bot, db s
 	go func() { memorizedFlashCard.UpdatePageOnNotion(client) }()
 	sendNewFlashCardToTelegramIfExistsToMemorize(db, selectedFlashCard.BoxId, bot)
 
-	memorizingNotification := notification.NewMemorizingNotification(
-		box.NewBoxesFromDb(db),
-		flashcard.NewFlashcardsFromDb(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE),
-	)
-
-	notification.EditExistedMessage(
-		bot,
-		memorizingNotification,
-		*notification.GetSentMessageId(db, memorizingNotification.GetDBTableName()),
-	)
+	notification.
+		NewMemorizingNotificationFromDB(db).
+		EditExistedMessage(bot, db)
 }
 
 func startOvertMemorizing(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {

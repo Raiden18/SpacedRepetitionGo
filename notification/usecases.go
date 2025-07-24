@@ -22,11 +22,12 @@ func DeleteOldAndSendNewMessageOrEditToDone(
 
 func EditExistedMessage(
 	bot telegram.Bot,
+	db sqlx.DB,
 	notification Notification,
-	messageId int,
 ) {
+	messageId := *GetSentMessageId(db, notification.GetDBTableName())
 	if len(notification.GetFlashCards()) > 0 {
-		EdittNotificationWithButtons(bot, notification, messageId)
+		EditNotificationWithButtons(bot, notification, messageId)
 	} else {
 		EditNotificationToWellDone(bot, notification, messageId)
 	}

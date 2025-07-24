@@ -3,7 +3,10 @@ package notification
 import (
 	"spacedrepetitiongo/box"
 	"spacedrepetitiongo/flashcard"
+	"spacedrepetitiongo/telegram"
 	"strconv"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type MemorizingNotification struct {
@@ -15,6 +18,13 @@ func NewEmptyMemorizingNotification() MemorizingNotification {
 	return NewMemorizingNotification(
 		[]box.Box{},
 		[]flashcard.Flashcard{},
+	)
+}
+
+func NewMemorizingNotificationFromDB(db sqlx.DB) MemorizingNotification {
+	return NewMemorizingNotification(
+		box.NewBoxesFromDb(db),
+		flashcard.NewFlashcardsFromDb(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE),
 	)
 }
 
@@ -50,4 +60,17 @@ func (memorizing MemorizingNotification) GetFlashCards() []flashcard.Flashcard {
 
 func (memorizing MemorizingNotification) GetDBTableName() string {
 	return "sent_need_memorizing_notification"
+}
+
+func (memorizing MemorizingNotification) EditExistedMessage(bot telegram.Bot, db sqlx.DB) {
+	EditExistedMessage(bot, db, memorizing)
+}
+
+func (memorizing MemorizingNotification) EditExistedNotificationOrSendNewIfNotSent(db sqlx.DB, bot telegram.Bot) {
+	previouslySentMessageId := GetSentMessageId(db, memorizing.GetDBTableName())
+	if previouslySentMessageId == nil {
+		SendNewNotification(bot, db, memorizing)
+	} else {
+		EditExistedMessage(bot, db, memorizing)
+	}
 }

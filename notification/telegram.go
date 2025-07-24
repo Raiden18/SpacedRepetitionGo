@@ -22,7 +22,7 @@ func EditNotificationToWellDone(bot telegram.Bot, notification Notification, mes
 	)
 }
 
-func EdittNotificationWithButtons(bot telegram.Bot, notification Notification, messageId int) {
+func EditNotificationWithButtons(bot telegram.Bot, notification Notification, messageId int) {
 	bot.EditTextMessage(
 		messageId,
 		notification.TextBody(),
