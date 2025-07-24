@@ -1,5 +1,12 @@
 package flashcard
 
+import (
+	"spacedrepetitiongo/notion"
+	"spacedrepetitiongo/telegram"
+
+	"github.com/jmoiron/sqlx"
+)
+
 type Flashcard struct {
 	Id          string  `db:"page_id"`
 	Image       *string `db:"image_url"`
@@ -21,6 +28,68 @@ type Flashcard struct {
 	KnowLevel12 *bool   `db:"know_level_12"`
 	KnowLevel13 *bool   `db:"know_level_13"`
 	KnowLevel14 *bool   `db:"know_level_14"`
+}
+
+func NewMemorizingFlashcardFromDb(db sqlx.DB, id string) Flashcard {
+	return GetFromDdById(db, id, FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+}
+
+func NewRevisingFlashcardcFromDbById(db sqlx.DB, id string) Flashcard {
+	return GetFromDdById(db, id, FLASH_CARDS_TO_REVISE_TABLE)
+}
+
+func NewRevisingFlashcardFromDbByBoxId(db sqlx.DB, boxId string) *Flashcard {
+	if CountInDb(db, boxId, FLASH_CARDS_TO_REVISE_TABLE) > 0 {
+		flashcard := GetFormBox(db, boxId, FLASH_CARDS_TO_REVISE_TABLE)
+		return &flashcard
+	} else {
+		return nil
+	}
+}
+
+func NewMemorizingFlashcardFromDbByBoxId(db sqlx.DB, boxId string) *Flashcard {
+	if CountInDb(db, boxId, FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE) > 0 {
+		flashcard := GetFormBox(db, boxId, FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+		return &flashcard
+	} else {
+		return nil
+	}
+}
+
+func (flashcard Flashcard) RemoveFrom(db sqlx.DB, tableName string) Flashcard {
+	flashcard.RemoveFromDb(db, tableName)
+	return flashcard
+}
+
+func (flashcard Flashcard) UpdateOnNotion(client notion.Client) Flashcard {
+	go func() { flashcard.UpdatePageOnNotion(client) }()
+	return flashcard
+}
+
+func (flashcard Flashcard) RemoveFromChat(bot telegram.Bot, id int) Flashcard {
+	bot.DeleteMessage(id)
+	return flashcard
+}
+
+func (flashcard Flashcard) InsertInto(db sqlx.DB, tableName string) Flashcard {
+	InsertFlashCardsIntoDB(db, []Flashcard{flashcard}, tableName)
+	return flashcard
+}
+
+func (flashcard *Flashcard) ToTelegramMessageToRevise() *FlashcardTelegramMessageToRevise {
+	if flashcard == nil {
+		return nil
+	}
+	message := NewFlashcardTelegramMessageToRevise(*flashcard)
+	return &message
+}
+
+func (flashcard *Flashcard) ToTelegramMessageToMemorize() *FlashcardTelegramMessageToMemorize {
+	if flashcard == nil {
+		return nil
+	}
+	message := NewFlashcardTelegramMessageToMemorize(*flashcard)
+	return &message
 }
 
 func (flashcard Flashcard) HasExplanation() bool {

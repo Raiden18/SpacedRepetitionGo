@@ -62,7 +62,7 @@ func (memorizing MemorizingNotification) GetDBTableName() string {
 	return "sent_need_memorizing_notification"
 }
 
-func (memorizing MemorizingNotification) EditExistedMessage(bot telegram.Bot, db sqlx.DB) {
+func (memorizing MemorizingNotification) EditExistedMessage(db sqlx.DB, bot telegram.Bot) {
 	EditExistedMessage(bot, db, memorizing)
 }
 

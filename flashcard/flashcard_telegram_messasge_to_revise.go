@@ -16,6 +16,13 @@ func NewFlashcardTelegramMessageToRevise(flashcard Flashcard) FlashcardTelegramM
 	}
 }
 
+func (message *FlashcardTelegramMessageToRevise) SendToTelegram(bot telegram.Bot) {
+	if message == nil {
+		return
+	}
+	SendToTelegram(bot, message)
+}
+
 func (message FlashcardTelegramMessageToRevise) GetButtons() *tgbotapi.InlineKeyboardMarkup {
 	rows := [][]tgbotapi.InlineKeyboardButton{
 		tgbotapi.NewInlineKeyboardRow(

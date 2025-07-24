@@ -39,6 +39,13 @@ func (message FlashcardTelegramMessageToMemorize) GetFlashCard() Flashcard {
 	return message.Flashcard
 }
 
+func (message *FlashcardTelegramMessageToMemorize) SendToTelegram(bot telegram.Bot) {
+	if message == nil {
+		return
+	}
+	SendToTelegram(bot, message)
+}
+
 func newMemorizedButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 	return telegram.NewCallbackButton(
 		"Memorized ✅",

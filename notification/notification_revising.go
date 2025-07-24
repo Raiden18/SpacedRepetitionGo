@@ -59,7 +59,7 @@ func (revising RevisingNotification) GetDBTableName() string {
 	return "sent_need_revising_notifications"
 }
 
-func (revising RevisingNotification) EditExistedMessage(bot telegram.Bot, db sqlx.DB) {
+func (revising RevisingNotification) EditExistedMessage(db sqlx.DB, bot telegram.Bot) {
 	EditExistedMessage(bot, db, revising)
 }
 

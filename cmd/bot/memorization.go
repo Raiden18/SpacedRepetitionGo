@@ -10,50 +10,57 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func memorizeFlashCardAndShowNext(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	selectedFlashCardId := fetchValue(update.CallbackData())
-	selectedFlashCard := flashcard.GetFromDdById(db, selectedFlashCardId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	memorizedFlashCard := selectedFlashCard.Memorize()
-	memorizedFlashCard.RemoveFromDb(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	memorizedFlashCard.RemoveFromDb(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
-	bot.DeleteMessage(update.CallbackQuery.Message.MessageID)
-	go func() { memorizedFlashCard.UpdatePageOnNotion(client) }()
-	sendNewFlashCardToTelegramIfExistsToMemorize(db, selectedFlashCard.BoxId, bot)
+func showFlashCardForSelectedBoxToMemorize(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+	selectedBoxId := fetchValue(update.CallbackData())
+	resetMemorizingProcess(db, selectedBoxId, bot)
+}
+
+func memorizeFlashCardAndShowNext(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, notionClient notion.Client) {
+	memorizedFlashCard := flashcard.
+		NewMemorizingFlashcardFromDb(db, fetchValue(update.CallbackData())).
+		Memorize().
+		RemoveFrom(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE).
+		RemoveFrom(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE).
+		UpdateOnNotion(notionClient).
+		RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
 
 	notification.
 		NewMemorizingNotificationFromDB(db).
-		EditExistedMessage(bot, db)
+		EditExistedMessage(db, bot)
+
+	flashcard.
+		NewRevisingFlashcardFromDbByBoxId(db, memorizedFlashCard.BoxId).
+		ToTelegramMessageToMemorize().
+		SendToTelegram(bot)
 }
 
-func startOvertMemorizing(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	selectedFlashCardId := fetchValue(update.CallbackData())
-	selectedFlashCard := flashcard.GetFromDdById(db, selectedFlashCardId, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
+func startOvertMemorizing(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, notionClient notion.Client) {
+	selectedFlashCard := flashcard.
+		NewMemorizingFlashcardFromDb(db, fetchValue(update.CallbackData())).
+		RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
+
 	resetMemorizingProcess(db, selectedFlashCard.BoxId, bot)
-	bot.DeleteMessage(update.CallbackQuery.Message.MessageID)
 }
 
 func hideCurrentMemorizingFlashCardAndShowNext(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	selectedFlashCardId := fetchValue(update.CallbackData())
-	selectedFlashCard := flashcard.GetFromDdById(db, selectedFlashCardId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	selectedFlashCard.RemoveFromDb(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	bot.DeleteMessage(update.CallbackQuery.Message.MessageID)
-	sendNewFlashCardToTelegramIfExistsToMemorize(db, selectedFlashCard.BoxId, bot)
+	selectedFlashCard := flashcard.
+		NewMemorizingFlashcardFromDb(db, fetchValue(update.CallbackData())).
+		RemoveFrom(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE).
+		RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
+
+	flashcard.
+		NewRevisingFlashcardFromDbByBoxId(db, selectedFlashCard.BoxId).
+		ToTelegramMessageToMemorize().
+		SendToTelegram(bot)
 }
 
-func resetMemorizingProcess(db sqlx.DB, boxId string, tgBot telegram.Bot) {
+func resetMemorizingProcess(db sqlx.DB, boxId string, bot telegram.Bot) {
 	flashCards := flashcard.GetAllFromBdByBoxId(db, boxId, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
 	flashcard.ClearFlashCardTable(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
 	flashcard.InsertFlashCardsIntoDB(db, flashCards, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	sendNewFlashCardToTelegramIfExistsToMemorize(db, boxId, tgBot)
-}
 
-func sendNewFlashCardToTelegramIfExistsToMemorize(db sqlx.DB, boxId string, tgBot telegram.Bot) {
-	sendNewFlashCardToTelegramIfExists(
-		db,
-		boxId,
-		flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE,
-		func(f flashcard.Flashcard) {
-			flashcard.SendToTelegram(tgBot, flashcard.NewFlashcardTelegramMessageToMemorize(f))
-		},
-	)
+	flashcard.
+		NewMemorizingFlashcardFromDbByBoxId(db, boxId).
+		ToTelegramMessageToMemorize().
+		SendToTelegram(bot)
 }
