@@ -90,8 +90,8 @@ func updateImagesInDb(db sqlx.DB, flashcard []flashcard.Flashcard, tableName str
 	for _, flashcardWithOldImage := range flashcard {
 		fileName, error := findFileByNameWithoutExt(folder, flashcardWithOldImage.Id)
 		if error != nil {
-			//log.Println("ORIGINAL: " + *flashcardWithOldImage.Image)
-			//log.Println(error)
+			log.Println("ORIGINAL: " + *flashcardWithOldImage.Image)
+			log.Println(error)
 		}
 		flashcardWithOldImage.UpdateImage(db, tableName, fileName)
 	}
