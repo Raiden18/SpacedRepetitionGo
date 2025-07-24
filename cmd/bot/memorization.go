@@ -15,7 +15,7 @@ func showFlashCardForSelectedBoxToMemorize(update tgbotapi.Update, bot telegram.
 	resetMemorizingProcess(db, selectedBoxId, bot)
 }
 
-func memorizeFlashCardAndShowNext(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, notionClient notion.Client) {
+func onMemorizedButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, notionClient notion.Client) {
 	memorizedFlashCard := flashcard.
 		NewMemorizingFlashcardFromDb(db, fetchValue(update.CallbackData())).
 		Memorize().
@@ -34,7 +34,7 @@ func memorizeFlashCardAndShowNext(update tgbotapi.Update, bot telegram.Bot, db s
 		SendToTelegram(bot)
 }
 
-func startOvertMemorizing(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, notionClient notion.Client) {
+func onStartOvertButtonOfMemorizingFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, notionClient notion.Client) {
 	selectedFlashCard := flashcard.
 		NewMemorizingFlashcardFromDb(db, fetchValue(update.CallbackData())).
 		RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
@@ -42,14 +42,14 @@ func startOvertMemorizing(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, 
 	resetMemorizingProcess(db, selectedFlashCard.BoxId, bot)
 }
 
-func hideCurrentMemorizingFlashCardAndShowNext(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+func onNextButtonOfMemorizingFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
 	selectedFlashCard := flashcard.
 		NewMemorizingFlashcardFromDb(db, fetchValue(update.CallbackData())).
 		RemoveFrom(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE).
 		RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
 
 	flashcard.
-		NewRevisingFlashcardFromDbByBoxId(db, selectedFlashCard.BoxId).
+		NewMemorizingFlashcardFromDbByBoxId(db, selectedFlashCard.BoxId).
 		ToTelegramMessageToMemorize().
 		SendToTelegram(bot)
 }

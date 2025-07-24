@@ -49,11 +49,11 @@ func createButtons() map[string]ButtonCallbackFunc {
 	return map[string]ButtonCallbackFunc{
 		notification.BoxIdToRevise():                showFlashCardForSelectedBoxToRevise,
 		notification.BoxIdToMemorize():              showFlashCardForSelectedBoxToMemorize,
-		flashcard.ForgottenFlashCardKey():           forgetFlashCardAndShowAnother,
-		flashcard.RecalledFlashcardKey():            recallFlashCardAndShowAnother,
-		flashcard.NextMemorizingFlashCardKey():      hideCurrentMemorizingFlashCardAndShowNext,
-		flashcard.StartOverMemorizingFlashCardKey(): startOvertMemorizing,
-		flashcard.MemorizedMemorizingFlashCardKey(): memorizeFlashCardAndShowNext,
+		flashcard.ForgottenFlashCardKey():           onForgetButtonOfFlashcardClicked,
+		flashcard.RecalledFlashcardKey():            onRecallButtonOfFlashCardClicked,
+		flashcard.NextMemorizingFlashCardKey():      onNextButtonOfMemorizingFlashcardClicked,
+		flashcard.StartOverMemorizingFlashCardKey(): onStartOvertButtonOfMemorizingFlashcardClicked,
+		flashcard.MemorizedMemorizingFlashCardKey(): onMemorizedButtonOfFlashcardClicked,
 	}
 }
 

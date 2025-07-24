@@ -17,7 +17,7 @@ func showFlashCardForSelectedBoxToRevise(update tgbotapi.Update, bot telegram.Bo
 		SendToTelegram(bot)
 }
 
-func forgetFlashCardAndShowAnother(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+func onForgetButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
 	forgottenFlashcard := flashcard.
 		NewRevisingFlashcardcFromDbById(db, fetchValue(update.CallbackData())).
 		Forget().
@@ -40,7 +40,7 @@ func forgetFlashCardAndShowAnother(update tgbotapi.Update, bot telegram.Bot, db 
 		SendToTelegram(bot)
 }
 
-func recallFlashCardAndShowAnother(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+func onRecallButtonOfFlashCardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
 	recalledFlashcard := flashcard.
 		NewRevisingFlashcardcFromDbById(db, fetchValue(update.CallbackData())).
 		Recall().
