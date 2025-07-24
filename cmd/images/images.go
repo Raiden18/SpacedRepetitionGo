@@ -10,14 +10,19 @@ import (
 
 func convertHtmtoPng(filePath string) {
 	newPath := strings.TrimSuffix(filePath, ".htm") + ".png"
-	exec.Command("wkhtmltoimage", filePath, newPath).Run()
+	cmd := exec.Command("wkhtmltoimage", filePath, newPath)
+	error := cmd.Run()
+	if error != nil {
+		log.Println("Could not convert htm to png", error)
+	}
+	os.Remove(filePath)
 }
 
 func convertJfifToJpg(filePath string) {
 	newPath := strings.TrimSuffix(filePath, ".jfif") + ".jpg"
 	err := os.Rename(filePath, newPath)
 	if err != nil {
-		log.Println(err)
+		log.Println("Could not convert Jfif to Jpg.", err)
 	}
 }
 
@@ -28,7 +33,7 @@ func convertSVGtoPNG(svgPath string) {
 
 	cmd := exec.Command("rsvg-convert", "-f", "png", "-o", pngPath, svgPath)
 	if err := cmd.Run(); err != nil {
-		log.Fatalln(err)
+		log.Println("Could not convert Svg to PNG", err)
 	}
 
 	os.Remove(svgPath)
