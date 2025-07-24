@@ -12,6 +12,8 @@ import (
 )
 
 func convertWebPtoJPEG(filePath string) {
+	log.Println("HUI START")
+	log.Println("FILE PATH: " + filePath)
 	inFile, err := os.Open(filePath)
 	if err != nil {
 		log.Println(err)
@@ -26,14 +28,18 @@ func convertWebPtoJPEG(filePath string) {
 	outputPath := strings.TrimSuffix(filePath, ".webp") + ".jpg"
 	outFile, err := os.Create(outputPath)
 	if err != nil {
-		log.Println(err)
+		log.Println("Could not create out .jpg file", err)
 	}
 	defer outFile.Close()
 
-	jpeg.Encode(outFile, img, &jpeg.Options{Quality: 90})
+	error := jpeg.Encode(outFile, img, &jpeg.Options{Quality: 90})
+	if error != nil {
+		log.Println("Could not encode image.", error)
+	}
 	if err := os.Remove(filePath); err != nil {
 		log.Println("delete .webp error: %w", err)
 	}
+	log.Println("HUI END")
 }
 
 func convertJfifToJpg(filePath string) {
