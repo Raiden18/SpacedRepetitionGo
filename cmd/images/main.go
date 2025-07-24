@@ -29,8 +29,9 @@ func main() {
 	allFlashCards := append(flashCardsToMemorize, flashCardsToRevise...)
 
 	downloadImages(client, imagesFolder, allFlashCards)
+
 	findFileAndUpdate(imagesFolder, ".jfif", convertJfifToJpg)
-	//findFileAndUpdate(imagesFolder, ".webp", convertWebPtoJPEG)
+	findFileAndUpdate(imagesFolder, ".htm", convertHtmtoPng)
 	findFileAndUpdate(imagesFolder, ".svg", convertSVGtoPNG)
 
 	updateImagesInDb(db, flashCardsToRevise, flashcard.FLASH_CARDS_TO_REVISE_TABLE, imagesFolder)
