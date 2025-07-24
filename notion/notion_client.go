@@ -28,7 +28,7 @@ func (client Client) FetchDataBase(id string) *notionApi.Database {
 		notionApi.DatabaseID(id),
 	)
 	if error != nil {
-		log.Fatalln("Could not get Notiod Database: "+id, error)
+		log.Println("Could not get Notiod Database: "+id, error)
 	}
 
 	return db
@@ -41,7 +41,7 @@ func (client Client) FetchPagesFromDb(id string, request *notionApi.DatabaseQuer
 		request,
 	)
 	if err != nil {
-		log.Fatalln("Could not get pages from DB: "+id, err)
+		log.Println("Could not get pages from DB: "+id, err)
 	}
 	return pages.Results
 }
@@ -51,6 +51,6 @@ func (client Client) UpdatePage(id string, updateRequest *notionApi.PageUpdateRe
 
 	_, error := client.ClientImpl.Page.Update(context.Background(), pageId, updateRequest)
 	if error != nil {
-		log.Fatalln("Could not update Page", error)
+		log.Println("Could not update Page", error)
 	}
 }

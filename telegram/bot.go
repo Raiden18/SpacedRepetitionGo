@@ -39,7 +39,7 @@ func (bot Bot) SendTextMessage(
 	)
 
 	if error != nil {
-		log.Fatalln("Could not send new notification to Chat.", error)
+		log.Println("Could not send new notification to Chat.", error)
 	}
 
 	return message
@@ -61,7 +61,7 @@ func (bot Bot) SendPhotoMessage(
 		photoConfig.File = tgbotapi.FileURL(BLUE_SCREEN)
 		_, error := bot.ImplBot.Send(photoConfig)
 		if error != nil {
-			log.Fatalln("Could not send image event with BLUE SCREEN.", error)
+			log.Println("Could not send image event with BLUE SCREEN. Photo:"+photo, error)
 		}
 	}
 }
@@ -90,7 +90,10 @@ func (bot Bot) ListenForWebhook() tgbotapi.UpdatesChannel {
 
 func (bot Bot) ResponseToPressedButton(callback *tgbotapi.CallbackQuery) {
 	response := tgbotapi.NewCallback(callback.ID, "")
-	bot.ImplBot.Request(response)
+	_, error := bot.ImplBot.Request(response)
+	if error != nil {
+		log.Println("Could not Response to pressed button.", error)
+	}
 }
 
 func (bot Bot) DeleteMessage(messageId int) {
