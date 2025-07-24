@@ -20,17 +20,17 @@ func main() {
 	boxes := fetchFromNotion(observedDatabasesIds, notionClient)
 	reviseFlashcardsRequest := notion.NewDatabaseQueryRequest(
 		notion.And(
-			notion.KnowLevel(1, true),
-			notion.Show(true),
+			KnowLevel(1, true),
+			Show(true),
 		),
 	)
 	memorizeFlashcardsRequest := notion.NewDatabaseQueryRequest(
 		notion.And(
-			notion.KnowLevel(1, false),
-			notion.KnowLevel(2, false),
-			notion.KnowLevel(3, false),
-			notion.KnowLevel(4, false),
-			notion.Show(true),
+			KnowLevel(1, false),
+			KnowLevel(2, false),
+			KnowLevel(3, false),
+			KnowLevel(4, false),
+			Show(true),
 		),
 	)
 
@@ -101,4 +101,12 @@ func insertFlashCards(db sqlx.DB, flashCards []flashcard.Flashcard, tableName st
 	if len(flashCards) > 0 {
 		flashcard.InsertFlashCardsIntoDB(db, flashCards, tableName)
 	}
+}
+
+func KnowLevel(level int, equals bool) notionApi.PropertyFilter {
+	return notion.PropertyCheckBox(flashcard.KnowLevelProprtyName(level), equals)
+}
+
+func Show(equals bool) notionApi.PropertyFilter {
+	return notion.PropertyCheckBox("Show", equals)
 }

@@ -67,10 +67,13 @@ func (flashcard Flashcard) UpdatePageOnNotion(client notion.Client) {
 	client.UpdatePage(flashcard.Id, &updateRequest)
 }
 
+func KnowLevelProprtyName(level int) string {
+	return "Know Level " + strconv.Itoa(level)
+}
+
 func newKnowLevelProperty(knowLevel *bool, properties notionApi.Properties, level int, flashcard Flashcard) {
 	if knowLevel != nil {
-		propertyName := "Know Level " + strconv.Itoa(level)
-		properties[propertyName] = notionApi.CheckboxProperty{Checkbox: *knowLevel}
+		properties[KnowLevelProprtyName(level)] = notionApi.CheckboxProperty{Checkbox: *knowLevel}
 	}
 	if flashcard.BoxId == config.EnglishVocabularyId() {
 		properties["Interval 14"] = notionApi.NumberProperty{Number: 560}
@@ -96,7 +99,7 @@ func parseImage(page notionApi.Page) *string {
 func parseName(page notionApi.Page) string {
 	nameProperty := page.Properties["Name"]
 	titleProperty, _ := nameProperty.(*notionApi.TitleProperty)
-	return titleProperty.Title[0].Text.Content
+	return utils.RichTextToString(titleProperty.Title)
 }
 
 func parseExample(page notionApi.Page) *string {
@@ -128,7 +131,7 @@ func parseExplanation(ppage notionApi.Page) *string {
 }
 
 func parseKnowLevel(level int, page notionApi.Page) *bool {
-	knowLevelProperty := page.Properties["Know Level "+strconv.Itoa(level)]
+	knowLevelProperty := page.Properties[KnowLevelProprtyName(level)]
 	checkboxProperty, ok := knowLevelProperty.(*notionApi.CheckboxProperty)
 	if ok {
 		return &checkboxProperty.Checkbox

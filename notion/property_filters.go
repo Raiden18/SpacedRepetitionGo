@@ -1,8 +1,6 @@
 package notion
 
 import (
-	"strconv"
-
 	notionApi "github.com/jomei/notionapi"
 )
 
@@ -21,16 +19,4 @@ func PropertyCheckBox(name string, equals bool) notionApi.PropertyFilter {
 		Property: name,
 		Checkbox: &checkboxFilterCondition,
 	}
-}
-
-func KnowLevelName(level int) string {
-	return "Know Level " + strconv.Itoa(level)
-}
-
-func KnowLevel(level int, equals bool) notionApi.PropertyFilter {
-	return PropertyCheckBox(KnowLevelName(level), equals)
-}
-
-func Show(equals bool) notionApi.PropertyFilter {
-	return PropertyCheckBox("Show", equals)
 }
