@@ -47,8 +47,8 @@ type ButtonCallbackFunc func(update tgbotapi.Update, bot telegram.Bot, db sqlx.D
 
 func createButtons() map[string]ButtonCallbackFunc {
 	return map[string]ButtonCallbackFunc{
-		notification.BoxIdToRevise():                showFlashCardForSelectedBoxToRevise,
-		notification.BoxIdToMemorize():              showFlashCardForSelectedBoxToMemorize,
+		notification.BoxIdToRevise():                onBoxButtonToReviseClicked,
+		notification.BoxIdToMemorize():              onBoxButtonToMemorizeClicked,
 		flashcard.ForgottenFlashCardKey():           onForgetButtonOfFlashcardClicked,
 		flashcard.RecalledFlashcardKey():            onRecallButtonOfFlashCardClicked,
 		flashcard.NextMemorizingFlashCardKey():      onNextButtonOfMemorizingFlashcardClicked,

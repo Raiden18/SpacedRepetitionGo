@@ -10,11 +10,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func showFlashCardForSelectedBoxToRevise(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	flashcard.
-		NewRevisingFlashcardFromDbByBoxId(db, fetchValue(update.CallbackData())).
-		ToTelegramMessageToRevise().
-		SendToTelegram(bot)
+func onBoxButtonToReviseClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+	sendNextFlashcardToRevise(db, bot, fetchValue(update.CallbackData()))
 }
 
 func onForgetButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
@@ -34,10 +31,7 @@ func onForgetButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, 
 		NewMemorizingNotificationFromDB(db).
 		EditExistedMessage(db, bot)
 
-	flashcard.
-		NewRevisingFlashcardFromDbByBoxId(db, forgottenFlashcard.BoxId).
-		ToTelegramMessageToRevise().
-		SendToTelegram(bot)
+	sendNextFlashcardToRevise(db, bot, forgottenFlashcard.BoxId)
 }
 
 func onRecallButtonOfFlashCardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
@@ -52,8 +46,12 @@ func onRecallButtonOfFlashCardClicked(update tgbotapi.Update, bot telegram.Bot, 
 		NewRevisingNotificationFromDB(db).
 		EditExistedMessage(db, bot)
 
+	sendNextFlashcardToRevise(db, bot, recalledFlashcard.BoxId)
+}
+
+func sendNextFlashcardToRevise(db sqlx.DB, bot telegram.Bot, boxId string) {
 	flashcard.
-		NewRevisingFlashcardFromDbByBoxId(db, recalledFlashcard.BoxId).
+		NewRevisingFlashcardFromDbByBoxId(db, boxId).
 		ToTelegramMessageToRevise().
 		SendToTelegram(bot)
 }

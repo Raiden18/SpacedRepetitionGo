@@ -10,7 +10,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func showFlashCardForSelectedBoxToMemorize(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+func onBoxButtonToMemorizeClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
 	selectedBoxId := fetchValue(update.CallbackData())
 	resetMemorizingProcess(db, selectedBoxId, bot)
 }
@@ -28,10 +28,7 @@ func onMemorizedButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bo
 		NewMemorizingNotificationFromDB(db).
 		EditExistedMessage(db, bot)
 
-	flashcard.
-		NewRevisingFlashcardFromDbByBoxId(db, memorizedFlashCard.BoxId).
-		ToTelegramMessageToMemorize().
-		SendToTelegram(bot)
+	sendNewMemorizingFlashcardToChat(db, bot, memorizedFlashCard.BoxId)
 }
 
 func onStartOvertButtonOfMemorizingFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, notionClient notion.Client) {
@@ -47,18 +44,17 @@ func onNextButtonOfMemorizingFlashcardClicked(update tgbotapi.Update, bot telegr
 		NewMemorizingFlashcardFromDb(db, fetchValue(update.CallbackData())).
 		RemoveFrom(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE).
 		RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
-
-	flashcard.
-		NewMemorizingFlashcardFromDbByBoxId(db, selectedFlashCard.BoxId).
-		ToTelegramMessageToMemorize().
-		SendToTelegram(bot)
+	sendNewMemorizingFlashcardToChat(db, bot, selectedFlashCard.BoxId)
 }
 
 func resetMemorizingProcess(db sqlx.DB, boxId string, bot telegram.Bot) {
 	flashCards := flashcard.GetAllFromBdByBoxId(db, boxId, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
 	flashcard.ClearFlashCardTable(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
 	flashcard.InsertFlashCardsIntoDB(db, flashCards, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+	sendNewMemorizingFlashcardToChat(db, bot, boxId)
+}
 
+func sendNewMemorizingFlashcardToChat(db sqlx.DB, bot telegram.Bot, boxId string) {
 	flashcard.
 		NewMemorizingFlashcardFromDbByBoxId(db, boxId).
 		ToTelegramMessageToMemorize().
