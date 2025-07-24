@@ -17,7 +17,6 @@ func main() {
 	db := utils.OpenDb()
 	client := resty.New()
 	imagesFolder := "/root/repetition/images/"
-	log.Println("START IMAGES")
 	createFolderIfNotExist(imagesFolder)
 	clearFolder(imagesFolder)
 	flashCardsToRevise := flashCardsWithImages(
@@ -30,12 +29,12 @@ func main() {
 	allFlashCards := append(flashCardsToMemorize, flashCardsToRevise...)
 
 	downloadImages(client, imagesFolder, allFlashCards)
-	renameJfifToJpg(imagesFolder)
-	convertWebPtoJPEGInFolder(imagesFolder)
+	findFileAndUpdate(imagesFolder, ".jfif", convertJfifToJpg)
+	findFileAndUpdate(imagesFolder, ".webp", convertWebPtoJPEG)
+	findFileAndUpdate(imagesFolder, ".svg", convertSVGtoPNG)
 
 	updateImagesInDb(db, flashCardsToRevise, flashcard.FLASH_CARDS_TO_REVISE_TABLE, imagesFolder)
 	updateImagesInDb(db, flashCardsToMemorize, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE, imagesFolder)
-	log.Println("START END IMAGES")
 }
 
 func flashCardsWithImages(flashcards []flashcard.Flashcard) []flashcard.Flashcard {
@@ -91,8 +90,8 @@ func updateImagesInDb(db sqlx.DB, flashcard []flashcard.Flashcard, tableName str
 	for _, flashcardWithOldImage := range flashcard {
 		fileName, error := findFileByNameWithoutExt(folder, flashcardWithOldImage.Id)
 		if error != nil {
-			log.Println("ORIGINAL: " + *flashcardWithOldImage.Image)
-			log.Println(error)
+			//log.Println("ORIGINAL: " + *flashcardWithOldImage.Image)
+			//log.Println(error)
 		}
 		flashcardWithOldImage.UpdateImage(db, tableName, fileName)
 	}
