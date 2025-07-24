@@ -37,6 +37,7 @@ func findFileAndUpdate(folder string, expectedExtention string, convert func(pat
 	filepath.WalkDir(folder, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			log.Println(err)
+			return nil
 		}
 
 		if d.IsDir() {
@@ -44,6 +45,7 @@ func findFileAndUpdate(folder string, expectedExtention string, convert func(pat
 		}
 		if strings.HasSuffix(strings.ToLower(d.Name()), expectedExtention) {
 			convert(path)
+			return nil
 		}
 		return nil
 	})

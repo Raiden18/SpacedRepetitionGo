@@ -30,7 +30,7 @@ func main() {
 
 	downloadImages(client, imagesFolder, allFlashCards)
 	findFileAndUpdate(imagesFolder, ".jfif", convertJfifToJpg)
-	findFileAndUpdate(imagesFolder, ".webp", convertWebPtoJPEG)
+	//findFileAndUpdate(imagesFolder, ".webp", convertWebPtoJPEG)
 	findFileAndUpdate(imagesFolder, ".svg", convertSVGtoPNG)
 
 	updateImagesInDb(db, flashCardsToRevise, flashcard.FLASH_CARDS_TO_REVISE_TABLE, imagesFolder)
