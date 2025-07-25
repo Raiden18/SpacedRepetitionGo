@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"image"
+	"io"
 	"io/fs"
 	"log"
 	"os"
@@ -15,7 +17,7 @@ func createFolderIfNotExist(folder string) {
 	}
 }
 
-func clearFolder(folder string) {
+func deleteAllFilesFromFolder(folder string) {
 	d, err := os.Open(folder)
 	if err != nil {
 		log.Println(err)
@@ -33,7 +35,7 @@ func clearFolder(folder string) {
 	}
 }
 
-func findFileAndUpdate(folder string, expectedExtention string, convert func(path string)) {
+func findFilesAndConvert(folder string, converters map[string]func(path string)) {
 	filepath.WalkDir(folder, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			log.Println(err)
@@ -43,10 +45,16 @@ func findFileAndUpdate(folder string, expectedExtention string, convert func(pat
 		if d.IsDir() {
 			return nil
 		}
-		if strings.HasSuffix(strings.ToLower(d.Name()), expectedExtention) {
-			convert(path)
-			return nil
+
+		lowerName := strings.ToLower(d.Name())
+
+		for ext, converter := range converters {
+			if strings.HasSuffix(lowerName, ext) {
+				converter(path)
+				break
+			}
 		}
+
 		return nil
 	})
 }
@@ -72,4 +80,14 @@ func findFileByNameWithoutExt(folderPath, baseName string) (string, error) {
 	}
 
 	return "", fmt.Errorf("file %q not found in %q", baseName, folderPath)
+}
+
+func saveImage(path string, image image.Image, encode func(w io.Writer, image image.Image) error) error {
+	outFile, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	return encode(outFile, image)
 }
