@@ -7,6 +7,11 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+var (
+	FORGOTTEN_VALUE = false
+	MEMORIZED_VALUE = true
+)
+
 type Flashcard struct {
 	Id          string  `db:"page_id"`
 	Image       *string `db:"image_url"`
@@ -105,147 +110,145 @@ func (flashcard Flashcard) HasImage() bool {
 }
 
 func (flashcard Flashcard) Recall() Flashcard {
-	recalledValue := true
-
-	levels := []*bool{
-		flashcard.KnowLevel1,
-		flashcard.KnowLevel2,
-		flashcard.KnowLevel3,
-		flashcard.KnowLevel4,
-		flashcard.KnowLevel5,
-		flashcard.KnowLevel6,
-		flashcard.KnowLevel7,
-		flashcard.KnowLevel8,
-		flashcard.KnowLevel9,
-		flashcard.KnowLevel10,
-		flashcard.KnowLevel11,
-		flashcard.KnowLevel12,
-		flashcard.KnowLevel13,
-		flashcard.KnowLevel14,
+	knowLevels := map[int]*bool{
+		1:  flashcard.KnowLevel1,
+		2:  flashcard.KnowLevel2,
+		3:  flashcard.KnowLevel3,
+		4:  flashcard.KnowLevel4,
+		5:  flashcard.KnowLevel5,
+		6:  flashcard.KnowLevel6,
+		7:  flashcard.KnowLevel7,
+		8:  flashcard.KnowLevel8,
+		9:  flashcard.KnowLevel9,
+		10: flashcard.KnowLevel10,
+		11: flashcard.KnowLevel11,
+		12: flashcard.KnowLevel12,
+		13: flashcard.KnowLevel13,
+		14: flashcard.KnowLevel14,
 	}
 
-	fieldPtrs := []**bool{
-		&flashcard.KnowLevel1,
-		&flashcard.KnowLevel2,
-		&flashcard.KnowLevel3,
-		&flashcard.KnowLevel4,
-		&flashcard.KnowLevel5,
-		&flashcard.KnowLevel6,
-		&flashcard.KnowLevel7,
-		&flashcard.KnowLevel8,
-		&flashcard.KnowLevel9,
-		&flashcard.KnowLevel10,
-		&flashcard.KnowLevel11,
-		&flashcard.KnowLevel12,
-		&flashcard.KnowLevel13,
-		&flashcard.KnowLevel14,
-	}
+	RecallAsMap(knowLevels)
 
-	for i := 0; i < len(levels)-1; i++ {
-		curr := levels[i]
-		next := levels[i+1]
-
-		if curr != nil && *curr && next != nil && !*next {
-			*fieldPtrs[i+1] = &recalledValue
-			break
-		}
-	}
+	flashcard.KnowLevel1 = knowLevels[1]
+	flashcard.KnowLevel2 = knowLevels[2]
+	flashcard.KnowLevel3 = knowLevels[3]
+	flashcard.KnowLevel4 = knowLevels[4]
+	flashcard.KnowLevel5 = knowLevels[5]
+	flashcard.KnowLevel6 = knowLevels[6]
+	flashcard.KnowLevel7 = knowLevels[7]
+	flashcard.KnowLevel8 = knowLevels[8]
+	flashcard.KnowLevel9 = knowLevels[9]
+	flashcard.KnowLevel10 = knowLevels[10]
+	flashcard.KnowLevel11 = knowLevels[11]
+	flashcard.KnowLevel12 = knowLevels[12]
+	flashcard.KnowLevel13 = knowLevels[13]
+	flashcard.KnowLevel14 = knowLevels[14]
 
 	return flashcard
 }
 
 func (flashcard Flashcard) Forget() Flashcard {
-	forgottenValue := false
-	if flashcard.KnowLevel1 != nil {
-		flashcard.KnowLevel1 = &forgottenValue
+	knowLevels := map[int]*bool{
+		1:  flashcard.KnowLevel1,
+		2:  flashcard.KnowLevel2,
+		3:  flashcard.KnowLevel3,
+		4:  flashcard.KnowLevel4,
+		5:  flashcard.KnowLevel5,
+		6:  flashcard.KnowLevel6,
+		7:  flashcard.KnowLevel7,
+		8:  flashcard.KnowLevel8,
+		9:  flashcard.KnowLevel9,
+		10: flashcard.KnowLevel10,
+		11: flashcard.KnowLevel11,
+		12: flashcard.KnowLevel12,
+		13: flashcard.KnowLevel13,
+		14: flashcard.KnowLevel14,
 	}
-	if flashcard.KnowLevel2 != nil {
-		flashcard.KnowLevel2 = &forgottenValue
-	}
-	if flashcard.KnowLevel3 != nil {
-		flashcard.KnowLevel3 = &forgottenValue
-	}
-	if flashcard.KnowLevel4 != nil {
-		flashcard.KnowLevel4 = &forgottenValue
-	}
-	if flashcard.KnowLevel5 != nil {
-		flashcard.KnowLevel5 = &forgottenValue
-	}
-	if flashcard.KnowLevel6 != nil {
-		flashcard.KnowLevel6 = &forgottenValue
-	}
-	if flashcard.KnowLevel7 != nil {
-		flashcard.KnowLevel7 = &forgottenValue
-	}
-	if flashcard.KnowLevel8 != nil {
-		flashcard.KnowLevel8 = &forgottenValue
-	}
-	if flashcard.KnowLevel9 != nil {
-		flashcard.KnowLevel9 = &forgottenValue
-	}
-	if flashcard.KnowLevel10 != nil {
-		flashcard.KnowLevel10 = &forgottenValue
-	}
-	if flashcard.KnowLevel11 != nil {
-		flashcard.KnowLevel11 = &forgottenValue
-	}
-	if flashcard.KnowLevel12 != nil {
-		flashcard.KnowLevel12 = &forgottenValue
-	}
-	if flashcard.KnowLevel13 != nil {
-		flashcard.KnowLevel13 = &forgottenValue
-	}
-	if flashcard.KnowLevel14 != nil {
-		flashcard.KnowLevel14 = &forgottenValue
-	}
+
+	ForgetAsMap(knowLevels)
+
+	flashcard.KnowLevel1 = knowLevels[1]
+	flashcard.KnowLevel2 = knowLevels[2]
+	flashcard.KnowLevel3 = knowLevels[3]
+	flashcard.KnowLevel4 = knowLevels[4]
+	flashcard.KnowLevel5 = knowLevels[5]
+	flashcard.KnowLevel6 = knowLevels[6]
+	flashcard.KnowLevel7 = knowLevels[7]
+	flashcard.KnowLevel8 = knowLevels[8]
+	flashcard.KnowLevel9 = knowLevels[9]
+	flashcard.KnowLevel10 = knowLevels[10]
+	flashcard.KnowLevel11 = knowLevels[11]
+	flashcard.KnowLevel12 = knowLevels[12]
+	flashcard.KnowLevel13 = knowLevels[13]
+	flashcard.KnowLevel14 = knowLevels[14]
+
 	return flashcard
 }
 
 func (flashcard Flashcard) Memorize() Flashcard {
-	true_ := true
-	false_ := false
+	knowLevels := map[int]*bool{
+		1:  flashcard.KnowLevel1,
+		2:  flashcard.KnowLevel2,
+		3:  flashcard.KnowLevel3,
+		4:  flashcard.KnowLevel4,
+		5:  flashcard.KnowLevel5,
+		6:  flashcard.KnowLevel6,
+		7:  flashcard.KnowLevel7,
+		8:  flashcard.KnowLevel8,
+		9:  flashcard.KnowLevel9,
+		10: flashcard.KnowLevel10,
+		11: flashcard.KnowLevel11,
+		12: flashcard.KnowLevel12,
+		13: flashcard.KnowLevel13,
+		14: flashcard.KnowLevel14,
+	}
 
-	if flashcard.KnowLevel1 != nil {
-		flashcard.KnowLevel1 = &true_
-	}
-	if flashcard.KnowLevel2 != nil {
-		flashcard.KnowLevel2 = &false_
-	}
-	if flashcard.KnowLevel3 != nil {
-		flashcard.KnowLevel3 = &false_
-	}
-	if flashcard.KnowLevel4 != nil {
-		flashcard.KnowLevel4 = &false_
-	}
-	if flashcard.KnowLevel5 != nil {
-		flashcard.KnowLevel5 = &false_
-	}
-	if flashcard.KnowLevel6 != nil {
-		flashcard.KnowLevel6 = &false_
-	}
-	if flashcard.KnowLevel7 != nil {
-		flashcard.KnowLevel7 = &false_
-	}
-	if flashcard.KnowLevel8 != nil {
-		flashcard.KnowLevel8 = &false_
-	}
-	if flashcard.KnowLevel9 != nil {
-		flashcard.KnowLevel9 = &false_
-	}
-	if flashcard.KnowLevel10 != nil {
-		flashcard.KnowLevel10 = &false_
-	}
-	if flashcard.KnowLevel11 != nil {
-		flashcard.KnowLevel11 = &false_
-	}
-	if flashcard.KnowLevel12 != nil {
-		flashcard.KnowLevel12 = &false_
-	}
-	if flashcard.KnowLevel13 != nil {
-		flashcard.KnowLevel13 = &false_
-	}
-	if flashcard.KnowLevel14 != nil {
-		flashcard.KnowLevel14 = &false_
-	}
+	MemorizeAsMap(knowLevels)
+
+	flashcard.KnowLevel1 = knowLevels[1]
+	flashcard.KnowLevel2 = knowLevels[2]
+	flashcard.KnowLevel3 = knowLevels[3]
+	flashcard.KnowLevel4 = knowLevels[4]
+	flashcard.KnowLevel5 = knowLevels[5]
+	flashcard.KnowLevel6 = knowLevels[6]
+	flashcard.KnowLevel7 = knowLevels[7]
+	flashcard.KnowLevel8 = knowLevels[8]
+	flashcard.KnowLevel9 = knowLevels[9]
+	flashcard.KnowLevel10 = knowLevels[10]
+	flashcard.KnowLevel11 = knowLevels[11]
+	flashcard.KnowLevel12 = knowLevels[12]
+	flashcard.KnowLevel13 = knowLevels[13]
+	flashcard.KnowLevel14 = knowLevels[14]
+
 	return flashcard
+}
+
+func ForgetAsMap(knowLevels map[int]*bool) {
+	for key, value := range knowLevels {
+		if value != nil {
+			knowLevels[key] = &FORGOTTEN_VALUE
+		}
+	}
+}
+
+func MemorizeAsMap(knowLevels map[int]*bool) {
+	ForgetAsMap(knowLevels)
+	knowLevels[1] = &MEMORIZED_VALUE
+}
+
+func RecallAsMap(knowLevels map[int]*bool) {
+	nextToCheck := 0
+
+	for key, value := range knowLevels {
+		if value != nil && *value == FORGOTTEN_VALUE {
+			nextToCheck = key
+			break
+		}
+	}
+
+	for key, _ := range knowLevels {
+		if key <= nextToCheck {
+			knowLevels[key] = &MEMORIZED_VALUE
+		}
+	}
 }
