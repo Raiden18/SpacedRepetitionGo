@@ -14,26 +14,13 @@ var (
 )
 
 type Flashcard struct {
-	Id          string  `db:"page_id"`
-	Image       *string `db:"image_url"`
-	BoxId       string  `db:"notion_data_base_id"`
-	Name        string  `db:"name"`
-	Example     *string `db:"example"`
-	Explanation *string `db:"answer"`
-	KnowLevel1  *bool   `db:"know_level_1"`
-	KnowLevel2  *bool   `db:"know_level_2"`
-	KnowLevel3  *bool   `db:"know_level_3"`
-	KnowLevel4  *bool   `db:"know_level_4"`
-	KnowLevel5  *bool   `db:"know_level_5"`
-	KnowLevel6  *bool   `db:"know_level_6"`
-	KnowLevel7  *bool   `db:"know_level_7"`
-	KnowLevel8  *bool   `db:"know_level_8"`
-	KnowLevel9  *bool   `db:"know_level_9"`
-	KnowLevel10 *bool   `db:"know_level_10"`
-	KnowLevel11 *bool   `db:"know_level_11"`
-	KnowLevel12 *bool   `db:"know_level_12"`
-	KnowLevel13 *bool   `db:"know_level_13"`
-	KnowLevel14 *bool   `db:"know_level_14"`
+	Id          string
+	Image       *string
+	BoxId       string
+	Name        string
+	Example     *string
+	Explanation *string
+	KnowLevels  map[int]*bool
 }
 
 func NewMemorizingFlashcardFromDb(db sqlx.DB, id string) Flashcard {
@@ -110,91 +97,18 @@ func (flashcard Flashcard) HasImage() bool {
 	return flashcard.Image != nil && *flashcard.Image != ""
 }
 
-func (flashcard Flashcard) GetKnowLevels() map[int]*bool {
-	return map[int]*bool{
-		1:  flashcard.KnowLevel1,
-		2:  flashcard.KnowLevel2,
-		3:  flashcard.KnowLevel3,
-		4:  flashcard.KnowLevel4,
-		5:  flashcard.KnowLevel5,
-		6:  flashcard.KnowLevel6,
-		7:  flashcard.KnowLevel7,
-		8:  flashcard.KnowLevel8,
-		9:  flashcard.KnowLevel9,
-		10: flashcard.KnowLevel10,
-		11: flashcard.KnowLevel11,
-		12: flashcard.KnowLevel12,
-		13: flashcard.KnowLevel13,
-		14: flashcard.KnowLevel14,
-	}
-}
-
 func (flashcard Flashcard) Recall() Flashcard {
-	knowLevels := flashcard.GetKnowLevels()
-
-	RecallAsMap(knowLevels)
-
-	flashcard.KnowLevel1 = knowLevels[1]
-	flashcard.KnowLevel2 = knowLevels[2]
-	flashcard.KnowLevel3 = knowLevels[3]
-	flashcard.KnowLevel4 = knowLevels[4]
-	flashcard.KnowLevel5 = knowLevels[5]
-	flashcard.KnowLevel6 = knowLevels[6]
-	flashcard.KnowLevel7 = knowLevels[7]
-	flashcard.KnowLevel8 = knowLevels[8]
-	flashcard.KnowLevel9 = knowLevels[9]
-	flashcard.KnowLevel10 = knowLevels[10]
-	flashcard.KnowLevel11 = knowLevels[11]
-	flashcard.KnowLevel12 = knowLevels[12]
-	flashcard.KnowLevel13 = knowLevels[13]
-	flashcard.KnowLevel14 = knowLevels[14]
-
+	RecallAsMap(flashcard.KnowLevels)
 	return flashcard
 }
 
 func (flashcard Flashcard) Forget() Flashcard {
-	knowLevels := flashcard.GetKnowLevels()
-
-	ForgetAsMap(knowLevels)
-
-	flashcard.KnowLevel1 = knowLevels[1]
-	flashcard.KnowLevel2 = knowLevels[2]
-	flashcard.KnowLevel3 = knowLevels[3]
-	flashcard.KnowLevel4 = knowLevels[4]
-	flashcard.KnowLevel5 = knowLevels[5]
-	flashcard.KnowLevel6 = knowLevels[6]
-	flashcard.KnowLevel7 = knowLevels[7]
-	flashcard.KnowLevel8 = knowLevels[8]
-	flashcard.KnowLevel9 = knowLevels[9]
-	flashcard.KnowLevel10 = knowLevels[10]
-	flashcard.KnowLevel11 = knowLevels[11]
-	flashcard.KnowLevel12 = knowLevels[12]
-	flashcard.KnowLevel13 = knowLevels[13]
-	flashcard.KnowLevel14 = knowLevels[14]
-
+	ForgetAsMap(flashcard.KnowLevels)
 	return flashcard
 }
 
 func (flashcard Flashcard) Memorize() Flashcard {
-	knowLevels := flashcard.GetKnowLevels()
-
-	MemorizeAsMap(knowLevels)
-
-	flashcard.KnowLevel1 = knowLevels[1]
-	flashcard.KnowLevel2 = knowLevels[2]
-	flashcard.KnowLevel3 = knowLevels[3]
-	flashcard.KnowLevel4 = knowLevels[4]
-	flashcard.KnowLevel5 = knowLevels[5]
-	flashcard.KnowLevel6 = knowLevels[6]
-	flashcard.KnowLevel7 = knowLevels[7]
-	flashcard.KnowLevel8 = knowLevels[8]
-	flashcard.KnowLevel9 = knowLevels[9]
-	flashcard.KnowLevel10 = knowLevels[10]
-	flashcard.KnowLevel11 = knowLevels[11]
-	flashcard.KnowLevel12 = knowLevels[12]
-	flashcard.KnowLevel13 = knowLevels[13]
-	flashcard.KnowLevel14 = knowLevels[14]
-
+	MemorizeAsMap(flashcard.KnowLevels)
 	return flashcard
 }
 

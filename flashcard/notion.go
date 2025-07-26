@@ -28,29 +28,14 @@ func NewFlashCard(page notionApi.Page) Flashcard {
 		Name:        parseName(page),
 		Example:     parseExample(page),
 		Explanation: parseExplanation(page),
-		KnowLevel1:  parseKnowLevel(1, page),
-		KnowLevel2:  parseKnowLevel(2, page),
-		KnowLevel3:  parseKnowLevel(3, page),
-		KnowLevel4:  parseKnowLevel(4, page),
-		KnowLevel5:  parseKnowLevel(5, page),
-		KnowLevel6:  parseKnowLevel(6, page),
-		KnowLevel7:  parseKnowLevel(7, page),
-		KnowLevel8:  parseKnowLevel(8, page),
-		KnowLevel9:  parseKnowLevel(9, page),
-		KnowLevel10: parseKnowLevel(10, page),
-		KnowLevel11: parseKnowLevel(11, page),
-		KnowLevel12: parseKnowLevel(12, page),
-		KnowLevel13: parseKnowLevel(13, page),
-		KnowLevel14: parseKnowLevel(14, page),
+		KnowLevels:  parseKnowLevels(page),
 	}
 }
 
 func (flashcard Flashcard) UpdatePageOnNotion(client notion.Client) {
 	properties := notionApi.Properties{}
 
-	knowLevels := flashcard.GetKnowLevels()
-
-	for level, value := range knowLevels {
+	for level, value := range flashcard.KnowLevels {
 		if value != nil {
 			properties[KnowLevelProprtyName(level)] = notionApi.CheckboxProperty{Checkbox: *value}
 		}
@@ -116,6 +101,14 @@ func parseExplanation(ppage notionApi.Page) *string {
 	}
 	str := answerString + "\n" + explanationString
 	return &str
+}
+
+func parseKnowLevels(page notionApi.Page) map[int]*bool {
+	knowLevels := make(map[int]*bool)
+	for i := 1; i <= 14; i++ {
+		knowLevels[i] = parseKnowLevel(i, page)
+	}
+	return knowLevels
 }
 
 func parseKnowLevel(level int, page notionApi.Page) *bool {
