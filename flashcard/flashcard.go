@@ -238,6 +238,7 @@ func MemorizeAsMap(knowLevels map[int]*bool) {
 }
 
 func RecallAsMap(knowLevels map[int]*bool) {
+
 	keys := make([]int, 0, len(knowLevels))
 	for k := range knowLevels {
 		keys = append(keys, k)

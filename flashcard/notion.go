@@ -46,38 +46,41 @@ func NewFlashCard(page notionApi.Page) Flashcard {
 }
 
 func (flashcard Flashcard) UpdatePageOnNotion(client notion.Client) {
-	knowLevelProperties := notionApi.Properties{}
+	properties := notionApi.Properties{}
 
-	newKnowLevelProperty(flashcard.KnowLevel1, knowLevelProperties, 1, flashcard)
-	newKnowLevelProperty(flashcard.KnowLevel2, knowLevelProperties, 2, flashcard)
-	newKnowLevelProperty(flashcard.KnowLevel3, knowLevelProperties, 3, flashcard)
-	newKnowLevelProperty(flashcard.KnowLevel4, knowLevelProperties, 4, flashcard)
-	newKnowLevelProperty(flashcard.KnowLevel5, knowLevelProperties, 5, flashcard)
-	newKnowLevelProperty(flashcard.KnowLevel6, knowLevelProperties, 6, flashcard)
-	newKnowLevelProperty(flashcard.KnowLevel7, knowLevelProperties, 7, flashcard)
-	newKnowLevelProperty(flashcard.KnowLevel8, knowLevelProperties, 8, flashcard)
-	newKnowLevelProperty(flashcard.KnowLevel9, knowLevelProperties, 9, flashcard)
-	newKnowLevelProperty(flashcard.KnowLevel10, knowLevelProperties, 10, flashcard)
-	newKnowLevelProperty(flashcard.KnowLevel11, knowLevelProperties, 11, flashcard)
-	newKnowLevelProperty(flashcard.KnowLevel12, knowLevelProperties, 12, flashcard)
-	newKnowLevelProperty(flashcard.KnowLevel13, knowLevelProperties, 13, flashcard)
-	newKnowLevelProperty(flashcard.KnowLevel14, knowLevelProperties, 14, flashcard)
+	knowLevels := map[int]*bool{
+		1:  flashcard.KnowLevel1,
+		2:  flashcard.KnowLevel2,
+		3:  flashcard.KnowLevel3,
+		4:  flashcard.KnowLevel4,
+		5:  flashcard.KnowLevel5,
+		6:  flashcard.KnowLevel6,
+		7:  flashcard.KnowLevel7,
+		8:  flashcard.KnowLevel8,
+		9:  flashcard.KnowLevel9,
+		10: flashcard.KnowLevel10,
+		11: flashcard.KnowLevel11,
+		12: flashcard.KnowLevel12,
+		13: flashcard.KnowLevel13,
+		14: flashcard.KnowLevel14,
+	}
 
-	updateRequest := notion.NewUpdateRequest(knowLevelProperties)
+	for level, value := range knowLevels {
+		if value != nil {
+			properties[KnowLevelProprtyName(level)] = notionApi.CheckboxProperty{Checkbox: *value}
+		}
+	}
+
+	if flashcard.BoxId == config.EnglishVocabularyId() {
+		properties["Interval 14"] = notionApi.NumberProperty{Number: 560}
+	}
+
+	updateRequest := notion.NewUpdateRequest(properties)
 	client.UpdatePage(flashcard.Id, &updateRequest)
 }
 
 func KnowLevelProprtyName(level int) string {
 	return "Know Level " + strconv.Itoa(level)
-}
-
-func newKnowLevelProperty(knowLevel *bool, properties notionApi.Properties, level int, flashcard Flashcard) {
-	if knowLevel != nil {
-		properties[KnowLevelProprtyName(level)] = notionApi.CheckboxProperty{Checkbox: *knowLevel}
-	}
-	if flashcard.BoxId == config.EnglishVocabularyId() {
-		properties["Interval 14"] = notionApi.NumberProperty{Number: 560}
-	}
 }
 
 func parseImage(page notionApi.Page) *string {
