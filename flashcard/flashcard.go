@@ -1,6 +1,7 @@
 package flashcard
 
 import (
+	"sort"
 	"spacedrepetitiongo/notion"
 	"spacedrepetitiongo/telegram"
 
@@ -237,7 +238,14 @@ func MemorizeAsMap(knowLevels map[int]*bool) {
 }
 
 func RecallAsMap(knowLevels map[int]*bool) {
-	for key, value := range knowLevels {
+	keys := make([]int, 0, len(knowLevels))
+	for k := range knowLevels {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+
+	for _, key := range keys {
+		value := knowLevels[key]
 		if value != nil && !*value {
 			knowLevels[key] = &MEMORIZED_VALUE
 			break
