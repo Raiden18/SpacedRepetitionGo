@@ -110,8 +110,8 @@ func (flashcard Flashcard) HasImage() bool {
 	return flashcard.Image != nil && *flashcard.Image != ""
 }
 
-func (flashcard Flashcard) Recall() Flashcard {
-	knowLevels := map[int]*bool{
+func (flashcard Flashcard) GetKnowLevels() map[int]*bool {
+	return map[int]*bool{
 		1:  flashcard.KnowLevel1,
 		2:  flashcard.KnowLevel2,
 		3:  flashcard.KnowLevel3,
@@ -127,6 +127,10 @@ func (flashcard Flashcard) Recall() Flashcard {
 		13: flashcard.KnowLevel13,
 		14: flashcard.KnowLevel14,
 	}
+}
+
+func (flashcard Flashcard) Recall() Flashcard {
+	knowLevels := flashcard.GetKnowLevels()
 
 	RecallAsMap(knowLevels)
 
@@ -149,22 +153,7 @@ func (flashcard Flashcard) Recall() Flashcard {
 }
 
 func (flashcard Flashcard) Forget() Flashcard {
-	knowLevels := map[int]*bool{
-		1:  flashcard.KnowLevel1,
-		2:  flashcard.KnowLevel2,
-		3:  flashcard.KnowLevel3,
-		4:  flashcard.KnowLevel4,
-		5:  flashcard.KnowLevel5,
-		6:  flashcard.KnowLevel6,
-		7:  flashcard.KnowLevel7,
-		8:  flashcard.KnowLevel8,
-		9:  flashcard.KnowLevel9,
-		10: flashcard.KnowLevel10,
-		11: flashcard.KnowLevel11,
-		12: flashcard.KnowLevel12,
-		13: flashcard.KnowLevel13,
-		14: flashcard.KnowLevel14,
-	}
+	knowLevels := flashcard.GetKnowLevels()
 
 	ForgetAsMap(knowLevels)
 
@@ -187,22 +176,7 @@ func (flashcard Flashcard) Forget() Flashcard {
 }
 
 func (flashcard Flashcard) Memorize() Flashcard {
-	knowLevels := map[int]*bool{
-		1:  flashcard.KnowLevel1,
-		2:  flashcard.KnowLevel2,
-		3:  flashcard.KnowLevel3,
-		4:  flashcard.KnowLevel4,
-		5:  flashcard.KnowLevel5,
-		6:  flashcard.KnowLevel6,
-		7:  flashcard.KnowLevel7,
-		8:  flashcard.KnowLevel8,
-		9:  flashcard.KnowLevel9,
-		10: flashcard.KnowLevel10,
-		11: flashcard.KnowLevel11,
-		12: flashcard.KnowLevel12,
-		13: flashcard.KnowLevel13,
-		14: flashcard.KnowLevel14,
-	}
+	knowLevels := flashcard.GetKnowLevels()
 
 	MemorizeAsMap(knowLevels)
 

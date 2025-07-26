@@ -48,22 +48,7 @@ func NewFlashCard(page notionApi.Page) Flashcard {
 func (flashcard Flashcard) UpdatePageOnNotion(client notion.Client) {
 	properties := notionApi.Properties{}
 
-	knowLevels := map[int]*bool{
-		1:  flashcard.KnowLevel1,
-		2:  flashcard.KnowLevel2,
-		3:  flashcard.KnowLevel3,
-		4:  flashcard.KnowLevel4,
-		5:  flashcard.KnowLevel5,
-		6:  flashcard.KnowLevel6,
-		7:  flashcard.KnowLevel7,
-		8:  flashcard.KnowLevel8,
-		9:  flashcard.KnowLevel9,
-		10: flashcard.KnowLevel10,
-		11: flashcard.KnowLevel11,
-		12: flashcard.KnowLevel12,
-		13: flashcard.KnowLevel13,
-		14: flashcard.KnowLevel14,
-	}
+	knowLevels := flashcard.GetKnowLevels()
 
 	for level, value := range knowLevels {
 		if value != nil {
