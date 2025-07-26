@@ -237,18 +237,10 @@ func MemorizeAsMap(knowLevels map[int]*bool) {
 }
 
 func RecallAsMap(knowLevels map[int]*bool) {
-	nextToCheck := 0
-
 	for key, value := range knowLevels {
 		if value != nil && *value == FORGOTTEN_VALUE {
-			nextToCheck = key
-			break
-		}
-	}
-
-	for key, _ := range knowLevels {
-		if key <= nextToCheck {
 			knowLevels[key] = &MEMORIZED_VALUE
+			break
 		}
 	}
 }

@@ -125,7 +125,7 @@ func TestShouldRecallFromLevel1To3AsMap(t *testing.T) {
 	knowLevels := map[int]*bool{
 		1: &TRUE,
 		2: &TRUE,
-		3: &FALSE,
+		3: &TRUE,
 		4: &FALSE,
 		5: &FALSE,
 	}
@@ -136,7 +136,7 @@ func TestShouldRecallFromLevel1To3AsMap(t *testing.T) {
 		1: &TRUE,
 		2: &TRUE,
 		3: &TRUE,
-		4: &FALSE,
+		4: &TRUE,
 		5: &FALSE,
 	}
 
