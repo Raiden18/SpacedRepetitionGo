@@ -20,11 +20,13 @@ func main() {
 	createFolderIfNotExist(imagesFolder)
 	deleteAllFilesFromFolder(imagesFolder)
 
-	flashCardsToRevise := flashCardsWithImages(
+	flashCardsToRevise := utils.Filter(
 		flashcard.NewFlashcardsFromDb(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE),
+		flashcard.HasImage,
 	)
-	flashCardsToMemorize := flashCardsWithImages(
+	flashCardsToMemorize := utils.Filter(
 		flashcard.NewFlashcardsFromDb(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE),
+		flashcard.HasImage,
 	)
 
 	allFlashCards := append(flashCardsToMemorize, flashCardsToRevise...)
@@ -39,20 +41,19 @@ func main() {
 
 	findFilesAndConvert(imagesFolder, converts)
 
-	updateImagesInDb(db, flashCardsToRevise, flashcard.FLASH_CARDS_TO_REVISE_TABLE, imagesFolder)
-	updateImagesInDb(db, flashCardsToMemorize, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE, imagesFolder)
-}
+	utils.ForEach(
+		flashCardsToRevise,
+		func(f flashcard.Flashcard) {
+			updateImagesInDb(db, f, flashcard.FLASH_CARDS_TO_REVISE_TABLE, imagesFolder)
+		},
+	)
 
-func flashCardsWithImages(flashcards []flashcard.Flashcard) []flashcard.Flashcard {
-	flashcardsWithImages := []flashcard.Flashcard{}
-
-	for _, flashcard := range flashcards {
-		if flashcard.Image != nil {
-			flashcardsWithImages = append(flashcardsWithImages, flashcard)
-		}
-	}
-
-	return flashcardsWithImages
+	utils.ForEach(
+		flashCardsToRevise,
+		func(f flashcard.Flashcard) {
+			updateImagesInDb(db, f, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE, imagesFolder)
+		},
+	)
 }
 
 func downloadImages(client *resty.Client, folder string, flashcard []flashcard.Flashcard) {
@@ -62,8 +63,8 @@ func downloadImages(client *resty.Client, folder string, flashcard []flashcard.F
 			convertBase64ToImage(originalUrl, folder, flashcardWithOldImage.Id)
 		} else if strings.HasPrefix(originalUrl, "https://www.notion.so/image/") {
 			decoded, _ := url.QueryUnescape(
-				substringBefore(
-					substringAfter(originalUrl, "https://www.notion.so/image/"),
+				utils.SubstringBefore(
+					utils.SubstringAfter(originalUrl, "https://www.notion.so/image/"),
 					"?table=",
 				),
 			)
@@ -74,29 +75,11 @@ func downloadImages(client *resty.Client, folder string, flashcard []flashcard.F
 	}
 }
 
-func substringAfter(s, sep string) string {
-	idx := strings.Index(s, sep)
-	if idx == -1 {
-		return ""
+func updateImagesInDb(db sqlx.DB, flashcard flashcard.Flashcard, tableName string, folder string) {
+	fileName, error := findFileByNameWithoutExt(folder, flashcard.Id)
+	if error != nil {
+		log.Println("ORIGINAL: " + *flashcard.Image)
+		log.Println(error)
 	}
-	return s[idx+len(sep):]
-}
-
-func substringBefore(s, sep string) string {
-	idx := strings.Index(s, sep)
-	if idx == -1 {
-		return s
-	}
-	return s[:idx]
-}
-
-func updateImagesInDb(db sqlx.DB, flashcard []flashcard.Flashcard, tableName string, folder string) {
-	for _, flashcardWithOldImage := range flashcard {
-		fileName, error := findFileByNameWithoutExt(folder, flashcardWithOldImage.Id)
-		if error != nil {
-			log.Println("ORIGINAL: " + *flashcardWithOldImage.Image)
-			log.Println(error)
-		}
-		flashcardWithOldImage.UpdateImage(db, tableName, fileName)
-	}
+	flashcard.UpdateImage(db, tableName, fileName)
 }

@@ -97,6 +97,10 @@ func (flashcard Flashcard) HasImage() bool {
 	return flashcard.Image != nil && *flashcard.Image != ""
 }
 
+func HasImage(flashcard Flashcard) bool {
+	return flashcard.HasImage()
+}
+
 func (flashcard Flashcard) Recall() Flashcard {
 	RecallAsMap(flashcard.KnowLevels)
 	return flashcard
