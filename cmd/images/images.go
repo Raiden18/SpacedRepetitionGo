@@ -45,6 +45,19 @@ func convertSVGtoPNG(svgPath string) {
 	os.Remove(svgPath)
 }
 
+func convertRngToPng(filePath string) {
+	ext := filepath.Ext(filePath)
+	base := strings.TrimSuffix(filePath, ext)
+	pngPath := base + ".png"
+
+	cmd := exec.Command("convert", filePath, pngPath)
+	if err := cmd.Run(); err != nil {
+		log.Println("Could not convert RNG to PNG", err)
+	}
+
+	os.Remove(filePath)
+}
+
 func convertBase64ToImage(base64Str, outputFolder, baseFilename string) {
 	if idx := strings.Index(base64Str, "base64,"); idx != -1 {
 		base64Str = base64Str[idx+7:]
