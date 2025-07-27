@@ -35,7 +35,6 @@ func main() {
 		".jfif": convertJfifToJpg,
 		".htm":  convertHtmtoPng,
 		".svg":  convertSVGtoPNG,
-		".rng":  convertRngToPng,
 	}
 
 	findFilesAndConvert(imagesFolder, converts)
