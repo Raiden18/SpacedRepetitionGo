@@ -181,7 +181,7 @@ func (flashcard Flashcard) RemoveFromDb(db sqlx.DB, tableName string) {
 
 func InsertFlashCardsIntoDB(db sqlx.DB, flashCards []Flashcard, tableName string) {
 	entities := utils.Map(flashCards, toEntity)
-	query := `INSERT INTO ` + tableName + ` (
+	query := `INSERT IGNORE INTO ` + tableName + ` (
 		page_id, 
 		image_url, 
 		notion_data_base_id,
