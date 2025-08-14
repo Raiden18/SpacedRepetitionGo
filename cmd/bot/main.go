@@ -38,6 +38,7 @@ func main() {
 		if update.Message != nil {
 			if update.Message.IsCommand() {
 				command := update.Message.Command()
+				println("Received command:", command)
 				commands := createCommands()
 				commands[command]()
 			}
