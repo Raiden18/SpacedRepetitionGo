@@ -15,6 +15,9 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type ButtonCallbackFunc func(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client)
+type CommandCallbackFunc func()
+
 func main() {
 	bot := telegram.NewBot()
 	notionClient := notion.NewClient()
@@ -32,18 +35,23 @@ func main() {
 		if update.CallbackQuery != nil {
 			respondToPressedButtons(update, bot, db, notionClient)
 		}
+		if update.Message != nil {
+			if update.Message.IsCommand() {
+				command := update.Message.Command()
+				commands := createCommands()
+				commands[command]()
+			}
+		}
 	}
 }
 
 func respondToPressedButtons(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	key := fetchKey(update.CallbackQuery.Data)
+	key := strings.Split(update.CallbackQuery.Data, "=")[0]
 	buttons := createButtons()
 	pressedButtonCallback := buttons[key]
 	pressedButtonCallback(update, bot, db, client)
 	bot.ResponseToPressedButton(update.CallbackQuery)
 }
-
-type ButtonCallbackFunc func(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client)
 
 func createButtons() map[string]ButtonCallbackFunc {
 	return map[string]ButtonCallbackFunc{
@@ -57,6 +65,8 @@ func createButtons() map[string]ButtonCallbackFunc {
 	}
 }
 
-func fetchKey(payload string) string {
-	return strings.Split(payload, "=")[0]
+func createCommands() map[string]CommandCallbackFunc {
+	return map[string]CommandCallbackFunc{
+		"/update": updateCommand,
+	}
 }
