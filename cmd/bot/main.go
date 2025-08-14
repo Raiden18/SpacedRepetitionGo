@@ -38,7 +38,6 @@ func main() {
 		if update.Message != nil {
 			if update.Message.IsCommand() {
 				command := update.Message.Command()
-				println("Received command:", command)
 				commands := createCommands()
 				commands[command]()
 			}
@@ -68,6 +67,6 @@ func createButtons() map[string]ButtonCallbackFunc {
 
 func createCommands() map[string]CommandCallbackFunc {
 	return map[string]CommandCallbackFunc{
-		"/update": updateCommand,
+		"update": updateCommand,
 	}
 }
