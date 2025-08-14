@@ -35,10 +35,14 @@ func main() {
 		if update.CallbackQuery != nil {
 			respondToPressedButtons(update, bot, db, notionClient)
 		}
-		if update.Message != nil {
-			if update.Message.IsCommand() {
+		message := update.Message
+		if message != nil {
+			if message.IsCommand() {
 				command := update.Message.Command()
 				commands := createCommands()
+				bot.DeleteMessage(
+					message.MessageID,
+				)
 				commands[command]()
 			}
 		}
