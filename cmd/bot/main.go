@@ -40,10 +40,10 @@ func main() {
 			if message.IsCommand() {
 				command := update.Message.Command()
 				commands := createCommands()
+				commands[command]()
 				bot.DeleteMessage(
 					message.MessageID,
 				)
-				commands[command]()
 			}
 		}
 	}
