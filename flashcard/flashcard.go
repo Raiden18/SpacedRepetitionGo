@@ -34,17 +34,21 @@ func GenerateFromGPT(
 	resp, err := openAi.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
-			Model: openai.GPT5, // or openai.GPT5Mini
+			Model: openai.GPT5,
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
-					Content: "You are a helpful Greek language tutor.",
+					Content: "You are a helpful Greek language tutor. Your responses must follow the user's instructions exactly.",
 				},
 				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: `Give me an example sentence using the Greek word "` + word + `"` + `. Make the sentence simple, natural, and suitable for someone learning Greek. The sentence must be in Greek, and it should be a complete sentence that clearly shows the meaning of the word. Do not include any explanations or translations, just the sentence itself.`,
+					Role: openai.ChatMessageRoleUser,
+					Content: `Give me exactly one complete sentence in Greek using the word "` + word + `".
+							The sentence must be simple, natural, and suitable for someone learning Greek.
+							Do not include translations, explanations, punctuation outside the sentence, or more than one sentence.
+							Output only the sentence.`,
 				},
 			},
+			MaxTokens: 50,
 		},
 	)
 	if err != nil {
