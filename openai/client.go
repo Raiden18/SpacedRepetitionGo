@@ -53,6 +53,7 @@ func (client *OpenAiClient) CreateImage(prompt string) string {
 			Prompt:         prompt,
 			Size:           openai.CreateImageSize256x256,
 			ResponseFormat: openai.CreateImageResponseFormatURL,
+			OutputFormat:   openai.CreateImageOutputFormatJPEG,
 			N:              1,
 		},
 	)
