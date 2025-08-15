@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/sashabaranov/go-openai v1.41.1 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	golang.org/x/image v0.29.0 // indirect
 )

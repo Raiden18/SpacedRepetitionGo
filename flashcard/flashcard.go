@@ -1,11 +1,14 @@
 package flashcard
 
 import (
+	"context"
+	"fmt"
 	"sort"
 	"spacedrepetitiongo/notion"
 	"spacedrepetitiongo/telegram"
 
 	"github.com/jmoiron/sqlx"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 var (
@@ -23,13 +26,28 @@ type Flashcard struct {
 	KnowLevels  map[int]*bool
 }
 
-func GenerateFromGPT() Flashcard {
+func GenerateFromGPT(
+	language string,
+	word string,
+	openAi *openai.Client,
+) Flashcard {
+	resp, err := openAi.CreateCompletion(
+		context.Background(),
+		openai.CompletionRequest{
+			Model:     openai.GPT3Babbage002,
+			MaxTokens: 5,
+			Prompt:    "Generate an example sentence for the word '" + word + "' in " + language + "." + "The example should be a sentence using the word, use vocabulary for A1 level..",
+		},
+	)
+	if err != nil {
+		fmt.Printf("Completion error: %v\n", err)
+	}
 	return Flashcard{
 		Id:          "GPT_GENERATED",
 		Image:       nil,
 		BoxId:       "NO",
-		Name:        "GPT",
-		Example:     nil,
+		Name:        word,
+		Example:     &resp.Choices[0].Text,
 		Explanation: nil,
 		KnowLevels:  make(map[int]*bool),
 	}

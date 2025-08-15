@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Notion   Notion   `json:"notion"`
 	Telegram Telegram `json:"telegram"`
+	OpenAi   OpenAi   `json:"openai"`
 }
 
 type Notion struct {
@@ -28,6 +29,14 @@ type Telegram struct {
 
 type NotionDataBase struct {
 	Id string `json:"id"`
+}
+
+type OpenAi struct {
+	ApiKey string `json:"api_key"`
+}
+
+func OpenAiApiKey() string {
+	return NewConfigFromFile().OpenAi.ApiKey
 }
 
 func NotionApiKey() string {
