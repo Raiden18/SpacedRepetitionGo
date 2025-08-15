@@ -31,28 +31,43 @@ func GenerateFromGPT(
 	word string,
 	openAi *openai.Client,
 ) Flashcard {
-	resp, err := openAi.CreateCompletion(
+	resp, err := openAi.CreateChatCompletion(
 		context.Background(),
-		openai.CompletionRequest{
-			Model:     openai.GPT5,
-			MaxTokens: 5,
-			Prompt: fmt.Sprintf(
-				"Write exactly one complete sentence in Greek using the word \"%s\". "+
-					"The sentence must be simple, natural, and suitable for someone learning Greek. "+
-					"Do not add translations, explanations, or any text before or after the sentence.",
-				word,
-			),
+		openai.ChatCompletionRequest{
+			Model: openai.GPT5,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleSystem,
+					Content: "You are a Greek language tutor. Always reply with exactly one complete sentence in Greek.",
+				},
+				{
+					Role: openai.ChatMessageRoleUser,
+					Content: fmt.Sprintf(
+						"Write exactly one complete sentence in Greek using the word \"%s\". "+
+							"The sentence must be simple, natural, and suitable for someone learning Greek. "+
+							"Do not add translations, explanations, or any text before or after the sentence.",
+						word,
+					),
+				},
+			},
+			MaxTokens: 50,
 		},
 	)
 	if err != nil {
 		fmt.Printf("Completion error: %v\n", err)
+	}
+
+	mesasges := ""
+
+	for _, choice := range resp.Choices {
+		mesasges += choice.Message.Content + "\n"
 	}
 	return Flashcard{
 		Id:          "GPT_GENERATED",
 		Image:       nil,
 		BoxId:       "NO",
 		Name:        word,
-		Example:     &resp.Choices[0].Text,
+		Example:     &resp.Choices[0].Message.Content,
 		Explanation: nil,
 		KnowLevels:  make(map[int]*bool),
 	}
