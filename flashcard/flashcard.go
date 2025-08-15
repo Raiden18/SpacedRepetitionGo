@@ -31,12 +31,20 @@ func GenerateFromGPT(
 	word string,
 	openAi *openai.Client,
 ) Flashcard {
-	resp, err := openAi.CreateCompletion(
+	resp, err := openAi.CreateChatCompletion(
 		context.Background(),
-		openai.CompletionRequest{
-			Model:     openai.GPT5,
-			MaxTokens: 5,
-			Prompt:    `I want you to act as a language tutor. Give me an example sentence using the Greek word "` + word + `"` + `. Make the sentence simple, natural, and suitable for someone learning Greek. The sentence must be in Greek, and it should be a complete sentence that clearly shows the meaning of the word. Do not include any explanations or translations, just the sentence itself.`,
+		openai.ChatCompletionRequest{
+			Model: openai.GPT5, // or openai.GPT5Mini
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleSystem,
+					Content: "You are a helpful Greek language tutor.",
+				},
+				{
+					Role:    openai.ChatMessageRoleUser,
+					Content: `Give me an example sentence using the Greek word "` + word + `"` + `. Make the sentence simple, natural, and suitable for someone learning Greek. The sentence must be in Greek, and it should be a complete sentence that clearly shows the meaning of the word. Do not include any explanations or translations, just the sentence itself.`,
+				},
+			},
 		},
 	)
 	if err != nil {
@@ -47,7 +55,7 @@ func GenerateFromGPT(
 		Image:       nil,
 		BoxId:       "NO",
 		Name:        word,
-		Example:     &resp.Choices[0].Text,
+		Example:     &resp.Choices[0].Message.Content,
 		Explanation: nil,
 		KnowLevels:  make(map[int]*bool),
 	}
