@@ -55,8 +55,10 @@ func GenerateFromGPT(
 
 	urlImage := openAi.CreateImage(
 		fmt.Sprintf(
-			"Create an image of the word \"%s\" in clip art style, that represents the word visually. Must be has jpeg format.",
+			"Create an image of the word \"%s\" in clip art style, that represents the word visually. Details are not important."+
+				"Use the word in English \"%s\" as a label for the image.",
 			word,
+			englishMeaning,
 		),
 	)
 
