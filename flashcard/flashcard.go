@@ -67,7 +67,7 @@ func GenerateFromGPT(
 		Image:       nil,
 		BoxId:       "NO",
 		Name:        word,
-		Example:     &resp.Choices[0].Message.Content,
+		Example:     &mesasges,
 		Explanation: nil,
 		KnowLevels:  make(map[int]*bool),
 	}
