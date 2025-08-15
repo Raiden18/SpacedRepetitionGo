@@ -23,6 +23,18 @@ type Flashcard struct {
 	KnowLevels  map[int]*bool
 }
 
+func GenerateFromGPT() Flashcard {
+	return Flashcard{
+		Id:          "GPT_GENERATED",
+		Image:       nil,
+		BoxId:       "NO",
+		Name:        "GPT",
+		Example:     nil,
+		Explanation: nil,
+		KnowLevels:  make(map[int]*bool),
+	}
+}
+
 func NewMemorizingFlashcardFromDb(db sqlx.DB, id string) Flashcard {
 	return GetFromDdById(db, id, FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
 }

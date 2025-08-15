@@ -1,6 +1,7 @@
 package main
 
 import (
+	"spacedrepetitiongo/bot"
 	"spacedrepetitiongo/box"
 	"spacedrepetitiongo/flashcard"
 	"spacedrepetitiongo/notification"
@@ -16,6 +17,7 @@ func main() {
 	flashcard.CreateTableIfNotExist(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE)
 	flashcard.CreateTableIfNotExist(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
 	flashcard.CreateTableIfNotExist(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+	bot.CreateTableIfNotExist(db)
 
 	for _, emptyNotification := range createNotifications() {
 		notification.CreateTableIfNotExist(db, emptyNotification.GetDBTableName())
