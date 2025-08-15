@@ -50,7 +50,7 @@ func GenerateFromGPT(
 					),
 				},
 			},
-			MaxTokens: 50,
+			MaxCompletionTokens: 50,
 		},
 	)
 	if err != nil {
