@@ -62,6 +62,9 @@ func GenerateFromGPT(
 	for _, choice := range resp.Choices {
 		mesasges += choice.Message.Content + "\n"
 	}
+
+	fmt.Printf("HUI")
+	fmt.Printf(mesasges)
 	return Flashcard{
 		Id:          "GPT_GENERATED",
 		Image:       nil,
