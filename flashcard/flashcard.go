@@ -34,18 +34,20 @@ func GenerateFromGPT(
 	resp, err := openAi.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
-			Model: openai.GPT5,
+			Model: openai.GPT4,
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
-					Content: "You are a helpful Greek language tutor. Your responses must follow the user's instructions exactly.",
+					Content: "You are a Greek language tutor. Always reply with exactly one complete sentence in Greek.",
 				},
 				{
 					Role: openai.ChatMessageRoleUser,
-					Content: `Give me exactly one complete sentence in Greek using the word "` + word + `".
-							The sentence must be simple, natural, and suitable for someone learning Greek.
-							Do not include translations, explanations, punctuation outside the sentence, or more than one sentence.
-							Output only the sentence.`,
+					Content: fmt.Sprintf(
+						"Write exactly one complete sentence in Greek using the word \"%s\". "+
+							"The sentence must be simple, natural, and suitable for someone learning Greek. "+
+							"Do not add translations, explanations, or any text before or after the sentence.",
+						word,
+					),
 				},
 			},
 			MaxTokens: 50,
@@ -54,18 +56,12 @@ func GenerateFromGPT(
 	if err != nil {
 		fmt.Printf("Completion error: %v\n", err)
 	}
-
-	mesasges := ""
-
-	for _, choice := range resp.Choices {
-		mesasges += choice.Message.Content + "\n"
-	}
 	return Flashcard{
 		Id:          "GPT_GENERATED",
 		Image:       nil,
 		BoxId:       "NO",
 		Name:        word,
-		Example:     &mesasges,
+		Example:     &resp.Choices[0].Message.Content,
 		Explanation: nil,
 		KnowLevels:  make(map[int]*bool),
 	}
