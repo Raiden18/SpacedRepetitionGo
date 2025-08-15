@@ -1,4 +1,4 @@
-package main
+package image
 
 import (
 	"fmt"
@@ -11,13 +11,13 @@ import (
 	"strings"
 )
 
-func createFolderIfNotExist(folder string) {
+func CreateFolderIfNotExist(folder string) {
 	if err := os.MkdirAll(folder, os.ModePerm); err != nil {
 		log.Println(err)
 	}
 }
 
-func deleteAllFilesFromFolder(folder string) {
+func DeleteAllFilesFromFolder(folder string) {
 	d, err := os.Open(folder)
 	if err != nil {
 		log.Println(err)
@@ -35,7 +35,7 @@ func deleteAllFilesFromFolder(folder string) {
 	}
 }
 
-func findFilesAndConvert(folder string, converters map[string]func(path string)) {
+func FindFilesAndConvert(folder string, converters map[string]func(path string)) {
 	filepath.WalkDir(folder, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			log.Println(err)
@@ -59,7 +59,7 @@ func findFilesAndConvert(folder string, converters map[string]func(path string))
 	})
 }
 
-func findFileByNameWithoutExt(folderPath, baseName string) (string, error) {
+func FindFileByNameWithoutExt(folderPath, baseName string) (string, error) {
 	files, err := os.ReadDir(folderPath)
 	if err != nil {
 		return "", err

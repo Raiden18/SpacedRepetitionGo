@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"spacedrepetitiongo/flashcard"
+	"spacedrepetitiongo/image"
 	"spacedrepetitiongo/utils"
 
 	"net/url"
@@ -17,8 +18,8 @@ func main() {
 	db := utils.OpenDb()
 	client := resty.New()
 	imagesFolder := "/root/repetition/images/"
-	createFolderIfNotExist(imagesFolder)
-	deleteAllFilesFromFolder(imagesFolder)
+	image.CreateFolderIfNotExist(imagesFolder)
+	image.DeleteAllFilesFromFolder(imagesFolder)
 
 	flashCardsToRevise := utils.Filter(
 		flashcard.NewFlashcardsFromDb(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE),
@@ -34,12 +35,12 @@ func main() {
 	downloadImages(client, imagesFolder, allFlashCards)
 
 	converts := map[string]func(path string){
-		".jfif": convertJfifToJpg,
-		".htm":  convertHtmtoPng,
-		".svg":  convertSVGtoPNG,
+		".jfif": image.ConvertJfifToJpg,
+		".htm":  image.ConvertHtmtoPng,
+		".svg":  image.ConvertSVGtoPNG,
 	}
 
-	findFilesAndConvert(imagesFolder, converts)
+	image.FindFilesAndConvert(imagesFolder, converts)
 
 	utils.ForEach(
 		flashCardsToRevise,
@@ -60,7 +61,7 @@ func downloadImages(client *resty.Client, folder string, flashcard []flashcard.F
 	for _, flashcardWithOldImage := range flashcard {
 		originalUrl := *flashcardWithOldImage.Image
 		if strings.Contains(originalUrl, "base64") {
-			convertBase64ToImage(originalUrl, folder, flashcardWithOldImage.Id)
+			image.ConvertBase64ToImage(originalUrl, folder, flashcardWithOldImage.Id)
 		} else if strings.HasPrefix(originalUrl, "https://www.notion.so/image/") {
 			decoded, _ := url.QueryUnescape(
 				utils.SubstringBefore(
@@ -76,7 +77,7 @@ func downloadImages(client *resty.Client, folder string, flashcard []flashcard.F
 }
 
 func updateImagesInDb(db sqlx.DB, flashcard flashcard.Flashcard, tableName string, folder string) {
-	fileName, error := findFileByNameWithoutExt(folder, flashcard.Id)
+	fileName, error := image.FindFileByNameWithoutExt(folder, flashcard.Id)
 	if error != nil {
 		log.Println("ORIGINAL: " + *flashcard.Image)
 		log.Println(error)

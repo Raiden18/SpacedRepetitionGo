@@ -1,4 +1,4 @@
-package main
+package image
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-func convertHtmtoPng(filePath string) {
+func ConvertHtmtoPng(filePath string) {
 	newPath := strings.TrimSuffix(filePath, ".htm") + ".png"
 	cmd := exec.Command("wkhtmltoimage", filePath, newPath)
 	error := cmd.Run()
@@ -24,7 +24,7 @@ func convertHtmtoPng(filePath string) {
 	os.Remove(filePath)
 }
 
-func convertJfifToJpg(filePath string) {
+func ConvertJfifToJpg(filePath string) {
 	newPath := strings.TrimSuffix(filePath, ".jfif") + ".jpg"
 	err := os.Rename(filePath, newPath)
 	if err != nil {
@@ -32,7 +32,7 @@ func convertJfifToJpg(filePath string) {
 	}
 }
 
-func convertSVGtoPNG(svgPath string) {
+func ConvertSVGtoPNG(svgPath string) {
 	ext := filepath.Ext(svgPath)
 	base := strings.TrimSuffix(svgPath, ext)
 	pngPath := base + ".png"
@@ -45,7 +45,7 @@ func convertSVGtoPNG(svgPath string) {
 	os.Remove(svgPath)
 }
 
-func convertBase64ToImage(base64Str, outputFolder, baseFilename string) {
+func ConvertBase64ToImage(base64Str, outputFolder, baseFilename string) {
 	if idx := strings.Index(base64Str, "base64,"); idx != -1 {
 		base64Str = base64Str[idx+7:]
 	}
