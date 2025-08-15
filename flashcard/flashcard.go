@@ -34,7 +34,7 @@ func GenerateFromGPT(
 	resp, err := openAi.CreateCompletion(
 		context.Background(),
 		openai.CompletionRequest{
-			Model:     openai.GPT3Babbage002,
+			Model:     openai.GPT5,
 			MaxTokens: 5,
 			Prompt: fmt.Sprintf(
 				"Write exactly one complete sentence in Greek using the word \"%s\". "+
