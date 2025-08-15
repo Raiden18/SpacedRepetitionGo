@@ -3,8 +3,6 @@ package flashcard
 import (
 	"fmt"
 	"io"
-	"log"
-	"mime"
 	"os"
 	"path/filepath"
 	"sort"
@@ -201,38 +199,30 @@ func RecallAsMap(knowLevels map[int]*bool) {
 	}
 }
 
-func downloadImage(client *resty.Client, url, folder, baseFilename string) {
+func downloadImage(client *resty.Client, url, folder, baseFilename string) error {
 	resp, err := client.R().
-		SetDoNotParseResponse(true).
-		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/115.0.0.0 Safari/537.36").
-		SetHeader("Accept", "image/jpeg,image/webp,image/*,*/*").
 		SetHeader("Authorization", "Bearer "+config.OpenAiApiKey()).
 		Get(url)
 	if err != nil {
-		log.Println(err)
-		return
+		return fmt.Errorf("failed to download image: %w", err)
 	}
 	defer resp.RawBody().Close()
 
-	ext := ".img"
-	if contentType := resp.Header().Get("Content-Type"); contentType != "" {
-		if exts, _ := mime.ExtensionsByType(contentType); len(exts) > 0 {
-			ext = exts[0]
-		}
-	}
+	ext := ".jpg" // Assuming OpenAI always returns JPEG
 
 	fullPath := filepath.Join(folder, baseFilename+ext)
 
 	out, err := os.Create(fullPath)
 	if err != nil {
-		log.Println(err)
+		return fmt.Errorf("failed to create file: %w", err)
 	}
 	defer out.Close()
 
 	_, err = io.Copy(out, resp.RawBody())
 	if err != nil {
-		log.Println(err)
+		return fmt.Errorf("failed to copy image data to file: %w", err)
 	}
+	return nil
 }
 
 func findFileByNameWithoutExt(folderPath, baseName string) (string, error) {
