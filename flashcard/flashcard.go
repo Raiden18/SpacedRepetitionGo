@@ -3,6 +3,7 @@ package flashcard
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -54,6 +55,7 @@ func GenerateFromGPT(
 		),
 	)
 
+	log.Printf(urlImage)
 	downloadImage(
 		resty.New(),
 		urlImage,
