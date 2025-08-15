@@ -50,14 +50,15 @@ func (client *OpenAiClient) CreateImage(prompt string) string {
 	respUrl, err := client.Client.CreateImage(
 		context.Background(),
 		openai.ImageRequest{
+			Model:          openai.CreateImageModelDallE3,
 			Prompt:         prompt,
 			Size:           openai.CreateImageSize256x256,
-			ResponseFormat: openai.CreateImageResponseFormatURL,
+			ResponseFormat: openai.CreateImageResponseFormatB64JSON,
 			N:              1,
 		},
 	)
 	if err != nil {
 		log.Printf("Could not generate image: %v\n", err)
 	}
-	return respUrl.Data[0].URL
+	return respUrl.Data[0].B64JSON
 }
