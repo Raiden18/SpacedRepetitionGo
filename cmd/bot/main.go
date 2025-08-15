@@ -4,21 +4,20 @@ import (
 	"log"
 	"net/http"
 	"spacedrepetitiongo/bot"
-	"spacedrepetitiongo/config"
 	"spacedrepetitiongo/flashcard"
 	"spacedrepetitiongo/notion"
+	"spacedrepetitiongo/openai"
 	"spacedrepetitiongo/telegram"
 	"spacedrepetitiongo/utils"
 
 	_ "github.com/go-sql-driver/mysql"
-	openai "github.com/sashabaranov/go-openai"
 )
 
 func main() {
 	tg := telegram.NewBot()
 	notionClient := notion.NewClient()
 	db := utils.OpenDb()
-	openAi := openai.NewClient(config.OpenAiApiKey())
+	openAi := openai.NewClient()
 
 	updates := tg.ListenForWebhook()
 	go func() {

@@ -1,14 +1,13 @@
 package flashcard
 
 import (
-	"context"
 	"fmt"
 	"sort"
 	"spacedrepetitiongo/notion"
+	"spacedrepetitiongo/openai"
 	"spacedrepetitiongo/telegram"
 
 	"github.com/jmoiron/sqlx"
-	openai "github.com/sashabaranov/go-openai"
 )
 
 var (
@@ -29,48 +28,32 @@ type Flashcard struct {
 func GenerateFromGPT(
 	language string,
 	word string,
-	openAi *openai.Client,
+	openAi *openai.OpenAiClient,
 ) Flashcard {
-	resp, err := openAi.CreateChatCompletion(
-		context.Background(),
-		openai.ChatCompletionRequest{
-			Model: openai.GPT5,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleSystem,
-					Content: "You are a Greek language tutor. Always reply with exactly one complete sentence in Greek.",
-				},
-				{
-					Role: openai.ChatMessageRoleUser,
-					Content: fmt.Sprintf(
-						"Write exactly one complete sentence in Greek using the word \"%s\". "+
-							"The sentence must be simple, natural, and suitable for someone learning Greek. "+
-							"Do not add translations, explanations, or any text before or after the sentence.",
-						word,
-					),
-				},
-			},
-		},
+	englishMeaning := openAi.Ask(
+		"You are a Greek language tutor",
+		fmt.Sprintf(
+			"Give english translation for the word \"%s\""+
+				"The english must be simple, natural, and suitable"+
+				"Do not add any text before or after the translation.",
+			word,
+		),
 	)
-	if err != nil {
-		fmt.Printf("Completion error: %v\n", err)
-	}
 
-	mesasges := ""
+	urlImage := openAi.CreateImage(
+		fmt.Sprintf(
+			"Create an image of the word \"%s\" in clip art style, that represents the word visually",
+			word,
+		),
+	)
 
-	for _, choice := range resp.Choices {
-		mesasges += choice.Message.Content + "\n"
-	}
-
-	fmt.Printf("HUI")
-	fmt.Printf(mesasges)
 	return Flashcard{
 		Id:          "GPT_GENERATED",
-		Image:       nil,
+		Image:       &urlImage,
 		BoxId:       "NO",
-		Name:        word,
-		Example:     &mesasges,
-		Explanation: nil,
+		Name:        englishMeaning,
+		Example:     nil,
+		Explanation: &word,
 		KnowLevels:  make(map[int]*bool),
 	}
 }
