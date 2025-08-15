@@ -40,7 +40,7 @@ func main() {
 			if bot.IsAddGreekVocabularyState(db) {
 				gptFlashCard := flashcard.GenerateFromGPT(
 					"Greek",
-					"αρχίζω",
+					message.Text,
 					openAi,
 				)
 				toMemorize := flashcard.NewFlashcardTelegramMessageToMemorize(gptFlashCard)
