@@ -31,26 +31,17 @@ func GenerateFromGPT(
 	word string,
 	openAi *openai.Client,
 ) Flashcard {
-	resp, err := openAi.CreateChatCompletion(
+	resp, err := openAi.CreateCompletion(
 		context.Background(),
-		openai.ChatCompletionRequest{
-			Model: openai.GPT4,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleSystem,
-					Content: "You are a Greek language tutor. Always reply with exactly one complete sentence in Greek.",
-				},
-				{
-					Role: openai.ChatMessageRoleUser,
-					Content: fmt.Sprintf(
-						"Write exactly one complete sentence in Greek using the word \"%s\". "+
-							"The sentence must be simple, natural, and suitable for someone learning Greek. "+
-							"Do not add translations, explanations, or any text before or after the sentence.",
-						word,
-					),
-				},
-			},
-			MaxTokens: 50,
+		openai.CompletionRequest{
+			Model:     openai.GPT3Babbage002,
+			MaxTokens: 5,
+			Prompt: fmt.Sprintf(
+				"Write exactly one complete sentence in Greek using the word \"%s\". "+
+					"The sentence must be simple, natural, and suitable for someone learning Greek. "+
+					"Do not add translations, explanations, or any text before or after the sentence.",
+				word,
+			),
 		},
 	)
 	if err != nil {
@@ -61,7 +52,7 @@ func GenerateFromGPT(
 		Image:       nil,
 		BoxId:       "NO",
 		Name:        word,
-		Example:     &resp.Choices[0].Message.Content,
+		Example:     &resp.Choices[0].Text,
 		Explanation: nil,
 		KnowLevels:  make(map[int]*bool),
 	}
