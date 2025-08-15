@@ -50,12 +50,18 @@ func GenerateFromGPT(
 	if err != nil {
 		fmt.Printf("Completion error: %v\n", err)
 	}
+
+	mesasges := ""
+
+	for _, choice := range resp.Choices {
+		mesasges += choice.Message.Content + "\n"
+	}
 	return Flashcard{
 		Id:          "GPT_GENERATED",
 		Image:       nil,
 		BoxId:       "NO",
 		Name:        word,
-		Example:     &resp.Choices[0].Message.Content,
+		Example:     &mesasges,
 		Explanation: nil,
 		KnowLevels:  make(map[int]*bool),
 	}
