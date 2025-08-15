@@ -34,9 +34,9 @@ func GenerateFromGPT(
 	resp, err := openAi.CreateCompletion(
 		context.Background(),
 		openai.CompletionRequest{
-			Model:     openai.GPT3Babbage002,
+			Model:     openai.GPT5,
 			MaxTokens: 5,
-			Prompt:    "Generate an example sentence for the word '" + word + "' in " + language + "." + "The example should be a sentence using the word, use vocabulary for A1 level..",
+			Prompt:    `I want you to act as a language tutor. Give me an example sentence using the Greek word "` + word + `"` + `. Make the sentence simple, natural, and suitable for someone learning Greek. The sentence must be in Greek, and it should be a complete sentence that clearly shows the meaning of the word. Do not include any explanations or translations, just the sentence itself.`,
 		},
 	)
 	if err != nil {
