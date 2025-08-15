@@ -1,11 +1,8 @@
 package flashcard
 
 import (
-	"fmt"
 	"sort"
-	"spacedrepetitiongo/image"
 	"spacedrepetitiongo/notion"
-	"spacedrepetitiongo/openai"
 	"spacedrepetitiongo/telegram"
 
 	"github.com/jmoiron/sqlx"
@@ -24,50 +21,6 @@ type Flashcard struct {
 	Example     *string
 	Explanation *string
 	KnowLevels  map[int]*bool
-}
-
-func GenerateFromGPT(
-	language string,
-	word string,
-	openAi *openai.OpenAiClient,
-) Flashcard {
-	englishMeaning := openAi.Ask(
-		"You are a Greek language tutor",
-		fmt.Sprintf(
-			"Give english translation for the word \"%s\""+
-				"The english must be simple, natural, and suitable"+
-				"Do not add any text before or after the translation."+
-				"Verbs must be in nominative for \"I\", nouns in singular form",
-			word,
-		),
-	)
-
-	urlImage := openAi.CreateImage(
-		fmt.Sprintf(
-			"Create a realistic, concrete, and simple image that visually represents the phrase \"%s\". Avoid abstract concepts. The image should be clear, direct, and easy to understand, suitable for language learners.",
-			englishMeaning,
-		),
-	)
-
-	image.ConvertBase64ToImage(
-		urlImage,
-		"/root/repetition/images/",
-		"gpt_generated",
-	)
-
-	url, _ := image.FindFileByNameWithoutExt(
-		"/root/repetition/images/",
-		"gpt_generated",
-	)
-	return Flashcard{
-		Id:          "GPT_GENERATED",
-		Image:       &url,
-		BoxId:       "NO",
-		Name:        englishMeaning,
-		Example:     nil,
-		Explanation: &word,
-		KnowLevels:  make(map[int]*bool),
-	}
 }
 
 func NewMemorizingFlashcardFromDb(db sqlx.DB, id string) Flashcard {

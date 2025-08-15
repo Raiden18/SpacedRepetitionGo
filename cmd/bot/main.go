@@ -43,8 +43,7 @@ func main() {
 					message.Text,
 					openAi,
 				)
-				toMemorize := flashcard.NewFlashcardTelegramMessageToMemorize(gptFlashCard)
-				toMemorize.SendToTelegram(tg)
+				gptFlashCard.SendToTelegram(tg)
 			}
 		}
 	}
