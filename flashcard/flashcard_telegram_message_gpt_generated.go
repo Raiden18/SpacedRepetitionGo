@@ -82,7 +82,7 @@ func (message *FlashcardTelegramMessageGptGennerated) SendToTelegram(bot telegra
 
 func saveToNotion(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 	return telegram.NewCallbackButton(
-		"AddToNotion ✅",
+		"Add to notion ✅",
 		Parameter(
 			SaveToNotiondKey(),
 			flashcard.Id,
