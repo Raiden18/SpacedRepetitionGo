@@ -38,6 +38,7 @@ func main() {
 				commands := bot.CreateCommands()
 				commands[command](message, tg, db, notionClient)
 			}
+
 			if bot.IsAddGreekVocabularyState(db) {
 				//gptFlashCard := flashcard.GenerateFromGPT(
 				//	"Greek",
