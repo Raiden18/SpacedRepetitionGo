@@ -52,7 +52,7 @@ func ReplaceImages() {
 	)
 
 	utils.ForEach(
-		flashCardsToRevise,
+		flashCardsToMemorize,
 		func(f flashcard.Flashcard) {
 			updateImagesInDb(db, f, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE, imagesFolder)
 		},

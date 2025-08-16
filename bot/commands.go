@@ -1,7 +1,8 @@
 package bot
 
 import (
-	"spacedrepetitiongo/jobs"
+	"log"
+	"os/exec"
 	"spacedrepetitiongo/notion"
 	"spacedrepetitiongo/telegram"
 
@@ -20,9 +21,10 @@ func CreateCommands() map[string]CommandCallbackFunc {
 }
 
 func updateDataBases(message *tgbotapi.Message, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	jobs.Update()
-	jobs.ReplaceImages()
-	jobs.Notifiy()
+	cmd := exec.Command("/root/repetition/update-cache-notifier.sh")
+	if err := cmd.Run(); err != nil {
+		log.Println("Could not execute update command", err)
+	}
 	bot.DeleteMessage(
 		message.MessageID,
 	)
