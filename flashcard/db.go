@@ -179,7 +179,16 @@ func GetFormBox(db sqlx.DB, boxId string, tableName string) Flashcard {
 	return toFlashcard(entity)
 }
 
-func GetFirstFromDb(db sqlx.DB, boxId string, tableName string) Flashcard {
+func GetLast(db sqlx.DB, boxId string, tableName string) Flashcard {
+	entity := FlashcardEntity{}
+	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE notion_data_base_id=? AND next IS NULL", boxId)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return toFlashcard(entity)
+}
+
+func GetFirst(db sqlx.DB, boxId string, tableName string) Flashcard {
 	entity := FlashcardEntity{}
 	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE notion_data_base_id=? AND previous IS NULL", boxId)
 	if err != nil {

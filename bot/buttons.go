@@ -39,9 +39,20 @@ func onBoxButtonToReviseClicked(update tgbotapi.Update, bot telegram.Bot, db sql
 }
 
 func onForgetButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	forgottenFlashcard := flashcard.
-		NewRevisingFlashcardcFromDbById(db, fetchValue(update.CallbackData())).
-		Forget().
+	flashcardToForget := flashcard.NewRevisingFlashcardcFromDbById(db, fetchValue(update.CallbackData()))
+	forgottenFlashcard := flashcardToForget.Forget()
+
+	if flashcard.CountInDb(db, forgottenFlashcard.BoxId, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE) > 0 {
+		last := flashcard.GetLast(db, forgottenFlashcard.BoxId, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
+		last.Next = &forgottenFlashcard.BoxId
+		last.UpdateLinkedFlashCards(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
+		forgottenFlashcard.Previous = &last.BoxId
+	} else {
+		forgottenFlashcard.Previous = nil
+	}
+	forgottenFlashcard.Next = nil
+
+	forgottenFlashcard.
 		InsertInto(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE).
 		RemoveFrom(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE).
 		RemoveFromChat(bot, update.CallbackQuery.Message.MessageID).
@@ -157,7 +168,7 @@ func resetMemorizingProcess(db sqlx.DB, boxId string, bot telegram.Bot) {
 	flashCards := flashcard.GetAllFromBdByBoxId(db, boxId, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
 	flashcard.ClearTable(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
 	flashcard.InsertIntoDB(db, flashCards, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	firstFlashCard := flashcard.GetFirstFromDb(db, boxId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+	firstFlashCard := flashcard.GetFirst(db, boxId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
 	firstFlashCard.
 		ToTelegramMessageToMemorize().
 		SendToTelegram(bot)
