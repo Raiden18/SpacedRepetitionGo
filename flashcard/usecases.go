@@ -78,6 +78,11 @@ func shieldProhibitedSymbols(from string) string {
 func removeEmptyNewLine(from string) string {
 	replacer := strings.NewReplacer(
 		"\n", "",
+		"\r", "",
+		"\t", "",
+		"  ", " ", // replace double spaces with single space
+		"   ", " ", // in case there are multiple spaces
+		"    ", " ", // in case there are multiple spaces
 	)
 	return replacer.Replace(from)
 }
