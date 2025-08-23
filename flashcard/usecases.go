@@ -23,26 +23,31 @@ func SendToTelegram(bot telegram.Bot, message FlashcardTelegramMessage) {
 }
 
 func asTextMessage(flashcard Flashcard) string {
-	var textBuffer strings.Builder
+	var builder TelegramTextBuilder
 
-	textBuffer.WriteString("*" + shieldProhibitedSymbols(flashcard.Name) + "*")
+	builder.writeBold(flashcard.Name)
 
 	if flashcard.HasExample() {
-		textBuffer.WriteString("\n")
-		textBuffer.WriteString("\n")
-		textBuffer.WriteString("_" + shieldProhibitedSymbols(*flashcard.Example) + "_")
+		builder.writeEmptyLine()
+		builder.writeItalic(*flashcard.Example)
 	}
 
 	if flashcard.HasExplanation() {
-		textBuffer.WriteString("\n")
-		textBuffer.WriteString("\n")
-		textBuffer.WriteString("||" + shieldProhibitedSymbols(strings.TrimLeft(*flashcard.Explanation, "\n")) + "||")
+		builder.writeEmptyLine()
+		var explanationBuilder strings.Builder
+		explanationBuilder.WriteString("                               ") // added indent to make flash card wider
+		explanationBuilder.WriteString(
+			strings.TrimLeft(
+				*flashcard.Explanation,
+				"\n",
+			),
+		)
+		builder.writeSpoiler(explanationBuilder.String())
 	}
 
-	textBuffer.WriteString("\n")
-	textBuffer.WriteString("\n")
-	textBuffer.WriteString("Choose: ")
-	return textBuffer.String()
+	builder.writeEmptyLine()
+	builder.writeText("Choose: ")
+	return builder.String()
 }
 
 func shieldProhibitedSymbols(from string) string {
@@ -69,4 +74,35 @@ func shieldProhibitedSymbols(from string) string {
 		"\\", "\\\\",
 	)
 	return replacer.Replace(from)
+}
+
+type TelegramTextBuilder struct {
+	strings.Builder
+}
+
+func (b *TelegramTextBuilder) writeBold(text string) {
+	b.WriteString("*")
+	b.writeText(text)
+	b.WriteString("*")
+}
+
+func (b *TelegramTextBuilder) writeItalic(text string) {
+	b.WriteString("_")
+	b.writeText(text)
+	b.WriteString("_")
+}
+
+func (b *TelegramTextBuilder) writeSpoiler(text string) {
+	b.WriteString("||")
+	b.writeText(text)
+	b.WriteString("||")
+}
+
+func (b *TelegramTextBuilder) writeText(text string) {
+	b.WriteString(shieldProhibitedSymbols(text))
+}
+
+func (b *TelegramTextBuilder) writeEmptyLine() {
+	b.WriteString("\n")
+	b.WriteString("\n")
 }
