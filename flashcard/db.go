@@ -140,7 +140,7 @@ func NewFlashcardsFromDb(db sqlx.DB, tableName string) []Flashcard {
 	entities := []FlashcardEntity{}
 	err := db.Select(&entities, query)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Could not create New from DB. TableName="+tableName, err)
 	}
 	return utils.Map(entities, toFlashcard)
 }
@@ -165,7 +165,7 @@ func GetAllFromBdByBoxId(db sqlx.DB, boxId string, tableName string) []Flashcard
 	entities := []FlashcardEntity{}
 	err := db.Select(&entities, "SELECT * FROM "+tableName+" WHERE notion_data_base_id=?", boxId)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("Could not get all from BD by BoxId. TableName="+tableName, err)
 	}
 	return utils.Map(entities, toFlashcard)
 }
@@ -183,7 +183,7 @@ func GetLast(db sqlx.DB, boxId string, tableName string) *Flashcard {
 	entity := FlashcardEntity{}
 	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE notion_data_base_id=? AND next IS NULL", boxId)
 	if err != nil {
-		log.Fatalln("Could not get last item", err)
+		log.Fatalln("Could not get last item. TableName="+tableName, err)
 		return nil
 	}
 	flashcard := toFlashcard(entity)
@@ -194,7 +194,7 @@ func GetFirst(db sqlx.DB, boxId string, tableName string) Flashcard {
 	entity := FlashcardEntity{}
 	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE notion_data_base_id=? AND previous IS NULL", boxId)
 	if err != nil {
-		log.Fatalln("Could not get first item", err)
+		log.Fatalln("Could not get first item. TableName="+tableName, err)
 	}
 	return toFlashcard(entity)
 }
@@ -206,7 +206,7 @@ func GetNextFromDb(db sqlx.DB, currentFlashcard Flashcard, tableName string) *Fl
 	entity := FlashcardEntity{}
 	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE next=?", *currentFlashcard.Next)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("Could not Get Next. TableName="+tableName, err)
 	}
 	nextFlashcard := toFlashcard(entity)
 	return &nextFlashcard
