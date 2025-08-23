@@ -88,19 +88,28 @@ func parseExample(page notionApi.Page) *string {
 func parseExplanation(ppage notionApi.Page) *string {
 	explanationProperty := ppage.Properties["Explanation"]
 	explanationRichTextProperty, ok := explanationProperty.(*notionApi.RichTextProperty)
-	var explanationString string = ""
+	var explanationStringBuffer strings.Builder
 	if ok {
-		explanationString = utils.RichTextToString(explanationRichTextProperty.RichText)
+		explanationString := utils.RichTextToString(explanationRichTextProperty.RichText)
+		if explanationString != "" {
+			explanationStringBuffer.WriteString(explanationString)
+		}
 	}
 
 	answerProperty := ppage.Properties["Answers"]
 	answerRichTextProperty, ok := answerProperty.(*notionApi.RichTextProperty)
-	var answerString string = ""
 	if ok {
-		answerString = utils.RichTextToString(answerRichTextProperty.RichText)
+		answerString := utils.RichTextToString(answerRichTextProperty.RichText)
+		if answerString != "" {
+			if explanationStringBuffer.Len() > 0 {
+				explanationStringBuffer.WriteString("\n")
+
+			}
+			explanationStringBuffer.WriteString(answerString)
+		}
 	}
-	str := answerString + "\n" + explanationString
-	return &str
+	explanatuion := explanationStringBuffer.String()
+	return &explanatuion
 }
 
 func parseKnowLevels(page notionApi.Page) map[int]*bool {
