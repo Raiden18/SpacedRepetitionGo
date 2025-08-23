@@ -114,7 +114,6 @@ func onPreviousButtonOfMemorizingFlashcardClicked(update tgbotapi.Update, bot te
 	previousFlashCard := flashcard.NewMemorizingFlashcardFromDb(db, previousFlashcardId)
 
 	currentFlashcard := flashcard.NewMemorizingFlashcardFromDb(db, *previousFlashCard.Next)
-	currentFlashcard.RemoveFrom(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
 	currentFlashcard.RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
 
 	previousFlashCard.
@@ -127,7 +126,6 @@ func onNextButtonOfMemorizingFlashcardClicked(update tgbotapi.Update, bot telegr
 	nextFlashCard := flashcard.NewMemorizingFlashcardFromDb(db, nextFlashcardId)
 
 	currentFlashcard := flashcard.NewMemorizingFlashcardFromDb(db, *nextFlashCard.Previous)
-	currentFlashcard.RemoveFrom(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
 	currentFlashcard.RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
 
 	nextFlashCard.
