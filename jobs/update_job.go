@@ -36,8 +36,12 @@ func Update() {
 	pagesToRevise := fetchFlashCards(boxes, notionClient, &reviseFlashcardsRequest)
 	pagesToMemorize := fetchFlashCards(boxes, notionClient, &memorizeFlashcardsRequest)
 
-	flashCardsToRevise := flashcard.NewFlashCards(pagesToRevise)
-	flashCardsToMemorize := flashcard.NewFlashCards(pagesToMemorize)
+	flashCardsToRevise := orderFlashCards(
+		flashcard.NewFlashCards(pagesToRevise),
+	)
+	flashCardsToMemorize := orderFlashCards(
+		flashcard.NewFlashCards(pagesToMemorize),
+	)
 
 	box.ClearTable(db)
 	box.InsertIntoDB(db, boxes)
@@ -94,6 +98,25 @@ func fetchFromNotion(
 	}
 	wg.Wait()
 	return box.NewBoxes(databases)
+}
+
+func orderFlashCards(flashCards []flashcard.Flashcard) []flashcard.Flashcard {
+	orderedFlashCards := []flashcard.Flashcard{}
+	for index, flashCard := range flashCards {
+		if index == 0 {
+			flashCard.Previous = nil
+		}
+		nextIndex := index + 1
+		hasNext := nextIndex < len(flashCards)
+		if hasNext {
+			nextFlashCard := flashCards[nextIndex]
+			flashCard.Next = &nextFlashCard.Id
+		} else {
+			flashCard.Next = nil
+		}
+		orderedFlashCards = append(orderedFlashCards, flashCard)
+	}
+	return orderedFlashCards
 }
 
 func insertFlashCards(db sqlx.DB, flashCards []flashcard.Flashcard, tableName string) {

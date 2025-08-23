@@ -20,6 +20,8 @@ type FlashcardEntity struct {
 	Name        string  `db:"name"`
 	Example     *string `db:"example"`
 	Explanation *string `db:"answer"`
+	Next        *string `db:"next"`
+	Previous    *string `db:"previous"`
 	KnowLevel1  *bool   `db:"know_level_1"`
 	KnowLevel2  *bool   `db:"know_level_2"`
 	KnowLevel3  *bool   `db:"know_level_3"`
@@ -44,6 +46,8 @@ func toEntity(flashcard Flashcard) FlashcardEntity {
 		Name:        flashcard.Name,
 		Example:     flashcard.Example,
 		Explanation: flashcard.Explanation,
+		Next:        flashcard.Next,
+		Previous:    flashcard.Previous,
 		KnowLevel1:  flashcard.KnowLevels[1],
 		KnowLevel2:  flashcard.KnowLevels[2],
 		KnowLevel3:  flashcard.KnowLevels[3],
@@ -69,6 +73,8 @@ func toFlashcard(entity FlashcardEntity) Flashcard {
 		Name:        entity.Name,
 		Example:     entity.Example,
 		Explanation: entity.Explanation,
+		Next:        entity.Next,
+		Previous:    entity.Previous,
 		KnowLevels: map[int]*bool{
 			1:  entity.KnowLevel1,
 			2:  entity.KnowLevel2,
@@ -106,6 +112,8 @@ func CreateTableIfNotExist(db sqlx.DB, tableName string) {
 			name TEXT,
 			example TEXT,
 			answer TEXT,
+			next TEXT,
+			previous TEXT,
 			know_level_1 TEXT,
 			know_level_2 TEXT,
 			know_level_3 TEXT,
@@ -188,6 +196,8 @@ func InsertFlashCardsIntoDB(db sqlx.DB, flashCards []Flashcard, tableName string
 		name, 
 		example, 
 		answer,
+		next,
+		previous,
 		know_level_1,
 		know_level_2,
 		know_level_3,
@@ -209,6 +219,8 @@ func InsertFlashCardsIntoDB(db sqlx.DB, flashCards []Flashcard, tableName string
 		:name,
 		:example,
 		:answer,
+		:next,
+		:previous,
 		:know_level_1,
 		:know_level_2,
 		:know_level_3,

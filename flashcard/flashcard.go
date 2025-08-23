@@ -20,6 +20,8 @@ type Flashcard struct {
 	Name        string
 	Example     *string
 	Explanation *string
+	Next        *string
+	Previous    *string
 	KnowLevels  map[int]*bool
 }
 
