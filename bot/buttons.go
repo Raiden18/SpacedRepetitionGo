@@ -94,6 +94,20 @@ func onMemorizedButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bo
 		UpdateOnNotion(notionClient).
 		RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
 
+	previous := flashcard.NewMemorizingFlashcardFromDb(db, *memorizedFlashCard.Previous)
+	next := flashcard.NewMemorizingFlashcardFromDb(db, *memorizedFlashCard.Next)
+
+	if previous != nil {
+		previous.Next = memorizedFlashCard.Next
+		previous.UpdatePrevious(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+		previous.UpdatePrevious(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
+	}
+	if next != nil {
+		next.Previous = memorizedFlashCard.Previous
+		previous.UpdateNext(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+		previous.UpdateNext(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
+	}
+
 	notification.
 		NewMemorizingNotificationFromDB(db).
 		EditExistedMessage(db, bot)

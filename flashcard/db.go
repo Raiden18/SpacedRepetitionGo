@@ -153,6 +153,22 @@ func (flashcard Flashcard) UpdateImage(db sqlx.DB, tableName string, newImage st
 	}
 }
 
+func (flashcard Flashcard) UpdatePrevious(db sqlx.DB, tableName string) {
+	query := `UPDATE ` + tableName + ` SET previous=? WHERE page_id =?;`
+	_, err := db.Exec(query, flashcard.Previous, flashcard.Id)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (flashcard Flashcard) UpdateNext(db sqlx.DB, tableName string) {
+	query := `UPDATE ` + tableName + ` SET next=? WHERE page_id =?;`
+	_, err := db.Exec(query, flashcard.Next, flashcard.Id)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func GetAllFromBdByBoxId(db sqlx.DB, boxId string, tableName string) []Flashcard {
 	entities := []FlashcardEntity{}
 	err := db.Select(&entities, "SELECT * FROM "+tableName+" WHERE notion_data_base_id=?", boxId)
