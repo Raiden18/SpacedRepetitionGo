@@ -179,20 +179,22 @@ func GetFormBox(db sqlx.DB, boxId string, tableName string) Flashcard {
 	return toFlashcard(entity)
 }
 
-func GetLast(db sqlx.DB, boxId string, tableName string) Flashcard {
+func GetLast(db sqlx.DB, boxId string, tableName string) *Flashcard {
 	entity := FlashcardEntity{}
 	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE notion_data_base_id=? AND next IS NULL", boxId)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("Could not get last item", err)
+		return nil
 	}
-	return toFlashcard(entity)
+	flashcard := toFlashcard(entity)
+	return &flashcard
 }
 
 func GetFirst(db sqlx.DB, boxId string, tableName string) Flashcard {
 	entity := FlashcardEntity{}
 	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE notion_data_base_id=? AND previous IS NULL", boxId)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("Could not get first item", err)
 	}
 	return toFlashcard(entity)
 }
