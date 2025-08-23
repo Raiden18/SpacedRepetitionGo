@@ -117,6 +117,11 @@ func onMemorizedButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bo
 			NewMemorizingFlashcardFromDb(db, *memorizedFlashCard.Next).
 			ToTelegramMessageToMemorize().
 			SendToTelegram(bot)
+	} else if memorizedFlashCard.Previous != nil {
+		flashcard.
+			NewMemorizingFlashcardFromDb(db, *memorizedFlashCard.Previous).
+			ToTelegramMessageToMemorize().
+			SendToTelegram(bot)
 	}
 }
 
