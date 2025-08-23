@@ -25,18 +25,22 @@ func SendToTelegram(bot telegram.Bot, message FlashcardTelegramMessage) {
 func asTextMessage(flashcard Flashcard) string {
 	var textBuffer strings.Builder
 
-	textBuffer.WriteString("*" + shieldProhibitedSymbols(flashcard.Name) + "*")
+	textBuffer.WriteString("*" + shieldProhibitedSymbols(removeEmptyNewLine(flashcard.Name)) + "*")
 
 	if flashcard.HasExample() {
 		textBuffer.WriteString("\n")
 		textBuffer.WriteString("\n")
-		textBuffer.WriteString("_" + shieldProhibitedSymbols(*flashcard.Example) + "_")
+		textBuffer.WriteString(
+			"_" + shieldProhibitedSymbols(removeEmptyNewLine(*flashcard.Example)) + "_",
+		)
 	}
 
 	if flashcard.HasExplanation() {
 		textBuffer.WriteString("\n")
 		textBuffer.WriteString("\n")
-		textBuffer.WriteString("||" + shieldProhibitedSymbols(*flashcard.Explanation) + "||")
+		textBuffer.WriteString(
+			"||" + shieldProhibitedSymbols(removeEmptyNewLine(*flashcard.Explanation)) + "||",
+		)
 	}
 
 	textBuffer.WriteString("\n")
@@ -67,6 +71,13 @@ func shieldProhibitedSymbols(from string) string {
 		"-", "\\-",
 		"+", "\\+",
 		"\\", "\\\\",
+	)
+	return replacer.Replace(from)
+}
+
+func removeEmptyNewLine(from string) string {
+	replacer := strings.NewReplacer(
+		"\n", "",
 	)
 	return replacer.Replace(from)
 }
