@@ -36,6 +36,7 @@ func asTextMessage(flashcard Flashcard) string {
 		builder.writeEmptyLine()
 		var explanationBuilder strings.Builder
 		explanationBuilder.WriteString("                               ") // added indent to make flash card wider
+		explanationBuilder.WriteString("\n")
 		explanationBuilder.WriteString(
 			strings.TrimLeft(
 				*flashcard.Explanation,
