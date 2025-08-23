@@ -101,20 +101,21 @@ func fetchFromNotion(
 }
 
 func orderFlashCards(flashCards []flashcard.Flashcard) []flashcard.Flashcard {
-	orderedFlashCards := []flashcard.Flashcard{}
+	orderedFlashCards := make([]flashcard.Flashcard, len(flashCards))
 	for index, flashCard := range flashCards {
 		if index == 0 {
 			flashCard.Previous = nil
+		} else {
+			prevFlashCard := flashCards[index-1]
+			flashCard.Previous = &prevFlashCard.Id
 		}
-		nextIndex := index + 1
-		hasNext := nextIndex < len(flashCards)
-		if hasNext {
-			nextFlashCard := flashCards[nextIndex]
+		if index+1 < len(flashCards) {
+			nextFlashCard := flashCards[index+1]
 			flashCard.Next = &nextFlashCard.Id
 		} else {
 			flashCard.Next = nil
 		}
-		orderedFlashCards = append(orderedFlashCards, flashCard)
+		orderedFlashCards[index] = flashCard
 	}
 	return orderedFlashCards
 }
