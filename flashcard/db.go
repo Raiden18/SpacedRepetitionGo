@@ -153,17 +153,9 @@ func (flashcard Flashcard) UpdateImage(db sqlx.DB, tableName string, newImage st
 	}
 }
 
-func (flashcard Flashcard) UpdatePrevious(db sqlx.DB, tableName string) {
-	query := `UPDATE ` + tableName + ` SET previous=? WHERE page_id =?;`
-	_, err := db.Exec(query, flashcard.Previous, flashcard.Id)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func (flashcard Flashcard) UpdateNext(db sqlx.DB, tableName string) {
-	query := `UPDATE ` + tableName + ` SET next=? WHERE page_id =?;`
-	_, err := db.Exec(query, flashcard.Next, flashcard.Id)
+func (flashcard Flashcard) UpdateLinkedFlashCards(db sqlx.DB, tableName string) {
+	query := `UPDATE ` + tableName + ` SET previous=?, next=? WHERE page_id =?;`
+	_, err := db.Exec(query, flashcard.Previous, flashcard.Next, flashcard.Id)
 	if err != nil {
 		log.Fatal(err)
 	}

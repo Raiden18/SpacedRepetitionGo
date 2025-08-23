@@ -94,18 +94,18 @@ func onMemorizedButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bo
 		UpdateOnNotion(notionClient).
 		RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
 
-	previous := flashcard.NewMemorizingFlashcardFromDb(db, *memorizedFlashCard.Previous)
-	next := flashcard.NewMemorizingFlashcardFromDb(db, *memorizedFlashCard.Next)
-
-	if previous != nil {
+	if memorizedFlashCard.Previous != nil {
+		previous := flashcard.NewMemorizingFlashcardFromDb(db, *memorizedFlashCard.Previous)
 		previous.Next = memorizedFlashCard.Next
-		previous.UpdatePrevious(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-		previous.UpdatePrevious(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
+		previous.UpdateLinkedFlashCards(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+		previous.UpdateLinkedFlashCards(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
 	}
-	if next != nil {
+
+	if memorizedFlashCard.Next != nil {
+		next := flashcard.NewMemorizingFlashcardFromDb(db, *memorizedFlashCard.Next)
 		next.Previous = memorizedFlashCard.Previous
-		previous.UpdateNext(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-		previous.UpdateNext(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
+		next.UpdateLinkedFlashCards(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+		next.UpdateLinkedFlashCards(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
 	}
 
 	notification.
@@ -154,13 +154,6 @@ func resetMemorizingProcess(db sqlx.DB, boxId string, bot telegram.Bot) {
 	flashcard.InsertIntoDB(db, flashCards, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
 	firstFlashCard := flashcard.GetFirstFromDb(db, boxId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
 	firstFlashCard.
-		ToTelegramMessageToMemorize().
-		SendToTelegram(bot)
-}
-
-func sendNewMemorizingFlashcardToChat(db sqlx.DB, bot telegram.Bot, boxId string) {
-	flashcard.
-		NewMemorizingFlashcardFromDbByBoxId(db, boxId).
 		ToTelegramMessageToMemorize().
 		SendToTelegram(bot)
 }
