@@ -25,12 +25,10 @@ func (message FlashcardTelegramMessageToMemorize) GetButtons() *tgbotapi.InlineK
 		navigationButtons = append(navigationButtons, newNextButton(message.Flashcard))
 	}
 	rows := [][]tgbotapi.InlineKeyboardButton{
-		tgbotapi.NewInlineKeyboardRow(
-			newMemorizedButton(message.Flashcard),
-		),
 		navigationButtons,
 		tgbotapi.NewInlineKeyboardRow(
-			newStartOverButton(message.Flashcard),
+			newMemorizedButton(message.Flashcard),
+			finishMemorizingButton(message.Flashcard),
 		),
 	}
 	externalButton := createExtranalButton(message.Flashcard)
@@ -83,11 +81,11 @@ func newNextButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 	)
 }
 
-func newStartOverButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
+func finishMemorizingButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 	return telegram.NewCallbackButton(
-		"Start over 🔄",
+		"Finish 🏁",
 		Parameter(
-			StartOverMemorizingFlashCardKey(),
+			FinishMemorizinKey(),
 			flashcard.Id,
 		),
 	)
@@ -105,6 +103,6 @@ func MemorizedMemorizingFlashCardKey() string {
 	return "memorizeFlashCardId"
 }
 
-func StartOverMemorizingFlashCardKey() string {
-	return "restartMemFlashCardId"
+func FinishMemorizinKey() string {
+	return "finishMemorizing"
 }

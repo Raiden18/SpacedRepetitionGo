@@ -25,8 +25,9 @@ type Flashcard struct {
 	KnowLevels  map[int]*bool
 }
 
-func NewMemorizingFlashcardFromDb(db sqlx.DB, id string) Flashcard {
-	return GetFromDdById(db, id, FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+func NewMemorizingFlashcardFromDb(db sqlx.DB, id string) *Flashcard {
+	flashCard := GetFromDdById(db, id, FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+	return &flashCard
 }
 
 func NewRevisingFlashcardcFromDbById(db sqlx.DB, id string) Flashcard {

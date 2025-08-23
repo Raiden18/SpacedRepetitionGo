@@ -29,7 +29,7 @@ func createButtons() map[string]ButtonCallbackFunc {
 		flashcard.RecalledFlashcardKey():            onRecallButtonOfFlashCardClicked,
 		flashcard.NextMemorizingFlashCardKey():      onNextButtonOfMemorizingFlashcardClicked,
 		flashcard.PreviousMemorizingFlashCardKey():  onPreviousButtonOfMemorizingFlashcardClicked,
-		flashcard.StartOverMemorizingFlashCardKey(): onStartOvertButtonOfMemorizingFlashcardClicked,
+		flashcard.FinishMemorizinKey():              onFinishedMemorizingButtonClicked,
 		flashcard.MemorizedMemorizingFlashCardKey(): onMemorizedButtonOfFlashcardClicked,
 	}
 }
@@ -98,15 +98,16 @@ func onMemorizedButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bo
 		NewMemorizingNotificationFromDB(db).
 		EditExistedMessage(db, bot)
 
-	sendNewMemorizingFlashcardToChat(db, bot, memorizedFlashCard.BoxId)
+	if memorizedFlashCard.Next != nil {
+		flashcard.
+			NewMemorizingFlashcardFromDb(db, *memorizedFlashCard.Next).
+			ToTelegramMessageToMemorize().
+			SendToTelegram(bot)
+	}
 }
 
-func onStartOvertButtonOfMemorizingFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, notionClient notion.Client) {
-	selectedFlashCard := flashcard.
-		NewMemorizingFlashcardFromDb(db, fetchValue(update.CallbackData())).
-		RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
-
-	resetMemorizingProcess(db, selectedFlashCard.BoxId, bot)
+func onFinishedMemorizingButtonClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, notionClient notion.Client) {
+	bot.DeleteMessage(update.CallbackQuery.Message.MessageID)
 }
 
 func onPreviousButtonOfMemorizingFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
