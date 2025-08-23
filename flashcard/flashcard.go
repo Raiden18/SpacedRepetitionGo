@@ -67,7 +67,7 @@ func (flashcard Flashcard) RemoveFromChat(bot telegram.Bot, id int) Flashcard {
 }
 
 func (flashcard Flashcard) InsertInto(db sqlx.DB, tableName string) Flashcard {
-	InsertFlashCardsIntoDB(db, []Flashcard{flashcard}, tableName)
+	InsertIntoDB(db, []Flashcard{flashcard}, tableName)
 	return flashcard
 }
 

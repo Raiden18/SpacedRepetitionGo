@@ -46,10 +46,10 @@ func Update() {
 	box.ClearTable(db)
 	box.InsertIntoDB(db, boxes)
 
-	flashcard.ClearFlashCardTable(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE)
+	flashcard.ClearTable(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE)
 	insertFlashCards(db, flashCardsToRevise, flashcard.FLASH_CARDS_TO_REVISE_TABLE)
 
-	flashcard.ClearFlashCardTable(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
+	flashcard.ClearTable(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
 	insertFlashCards(db, flashCardsToMemorize, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
 
 	defer db.Close()
@@ -122,7 +122,7 @@ func orderFlashCards(flashCards []flashcard.Flashcard) []flashcard.Flashcard {
 
 func insertFlashCards(db sqlx.DB, flashCards []flashcard.Flashcard, tableName string) {
 	if len(flashCards) > 0 {
-		flashcard.InsertFlashCardsIntoDB(db, flashCards, tableName)
+		flashcard.InsertIntoDB(db, flashCards, tableName)
 	}
 }
 

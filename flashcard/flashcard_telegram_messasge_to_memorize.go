@@ -61,7 +61,7 @@ func newNextButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 		"Next ➡️",
 		Parameter(
 			NextMemorizingFlashCardKey(),
-			flashcard.Id,
+			*flashcard.Next,
 		),
 	)
 }
@@ -77,7 +77,7 @@ func newStartOverButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 }
 
 func NextMemorizingFlashCardKey() string {
-	return "nextMemFlashCardId"
+	return "nextFlashCardId"
 }
 
 func MemorizedMemorizingFlashCardKey() string {

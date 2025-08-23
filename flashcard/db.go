@@ -171,6 +171,28 @@ func GetFormBox(db sqlx.DB, boxId string, tableName string) Flashcard {
 	return toFlashcard(entity)
 }
 
+func GetFirstFromDb(db sqlx.DB, boxId string, tableName string) Flashcard {
+	entity := FlashcardEntity{}
+	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE notion_data_base_id=? AND previous IS NULL", boxId)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return toFlashcard(entity)
+}
+
+func GetNextFromDb(db sqlx.DB, currentFlashcard Flashcard, tableName string) *Flashcard {
+	if currentFlashcard.Next == nil {
+		return nil
+	}
+	entity := FlashcardEntity{}
+	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE next=?", *currentFlashcard.Next)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	nextFlashcard := toFlashcard(entity)
+	return &nextFlashcard
+}
+
 func GetFromDdById(db sqlx.DB, id string, tableName string) Flashcard {
 	entity := FlashcardEntity{}
 	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE page_id=?", id)
@@ -187,7 +209,7 @@ func (flashcard Flashcard) RemoveFromDb(db sqlx.DB, tableName string) {
 	}
 }
 
-func InsertFlashCardsIntoDB(db sqlx.DB, flashCards []Flashcard, tableName string) {
+func InsertIntoDB(db sqlx.DB, flashCards []Flashcard, tableName string) {
 	entities := utils.Map(flashCards, toEntity)
 	query := `INSERT IGNORE INTO ` + tableName + ` (
 		page_id, 
@@ -242,7 +264,7 @@ func InsertFlashCardsIntoDB(db sqlx.DB, flashCards []Flashcard, tableName string
 	}
 }
 
-func ClearFlashCardTable(db sqlx.DB, tableName string) {
+func ClearTable(db sqlx.DB, tableName string) {
 	_, err := db.Exec(`DELETE FROM ` + tableName)
 	if err != nil {
 		log.Fatal(err)
