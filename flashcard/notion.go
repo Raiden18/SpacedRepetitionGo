@@ -103,7 +103,6 @@ func parseExplanation(ppage notionApi.Page) *string {
 		if answerString != "" {
 			if explanationStringBuffer.Len() > 0 {
 				explanationStringBuffer.WriteString("\n")
-
 			}
 			explanationStringBuffer.WriteString(answerString)
 		}

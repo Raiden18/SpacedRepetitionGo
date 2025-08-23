@@ -36,7 +36,7 @@ func asTextMessage(flashcard Flashcard) string {
 	if flashcard.HasExplanation() {
 		textBuffer.WriteString("\n")
 		textBuffer.WriteString("\n")
-		textBuffer.WriteString("||" + shieldProhibitedSymbols(*flashcard.Explanation) + "||")
+		textBuffer.WriteString("||" + shieldProhibitedSymbols(strings.TrimLeft(*flashcard.Explanation, "\n")) + "||")
 	}
 
 	textBuffer.WriteString("\n")
