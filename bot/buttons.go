@@ -28,6 +28,7 @@ func createButtons() map[string]ButtonCallbackFunc {
 		flashcard.ForgottenFlashCardKey():           onForgetButtonOfFlashcardClicked,
 		flashcard.RecalledFlashcardKey():            onRecallButtonOfFlashCardClicked,
 		flashcard.NextMemorizingFlashCardKey():      onNextButtonOfMemorizingFlashcardClicked,
+		flashcard.PreviousMemorizingFlashCardKey():  onPreviousButtonOfMemorizingFlashcardClicked,
 		flashcard.StartOverMemorizingFlashCardKey(): onStartOvertButtonOfMemorizingFlashcardClicked,
 		flashcard.MemorizedMemorizingFlashCardKey(): onMemorizedButtonOfFlashcardClicked,
 	}
@@ -108,13 +109,26 @@ func onStartOvertButtonOfMemorizingFlashcardClicked(update tgbotapi.Update, bot 
 	resetMemorizingProcess(db, selectedFlashCard.BoxId, bot)
 }
 
+func onPreviousButtonOfMemorizingFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+	previousFlashcardId := fetchValue(update.CallbackData())
+	previousFlashCard := flashcard.NewMemorizingFlashcardFromDb(db, previousFlashcardId)
+
+	currentFlashcard := flashcard.NewMemorizingFlashcardFromDb(db, *previousFlashCard.Next)
+	currentFlashcard.RemoveFrom(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+	currentFlashcard.RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
+
+	previousFlashCard.
+		ToTelegramMessageToMemorize().
+		SendToTelegram(bot)
+}
+
 func onNextButtonOfMemorizingFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
 	nextFlashcardId := fetchValue(update.CallbackData())
 	nextFlashCard := flashcard.NewMemorizingFlashcardFromDb(db, nextFlashcardId)
 
-	previousFlashCard := flashcard.NewMemorizingFlashcardFromDb(db, *nextFlashCard.Previous)
-	previousFlashCard.RemoveFrom(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	previousFlashCard.RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
+	currentFlashcard := flashcard.NewMemorizingFlashcardFromDb(db, *nextFlashCard.Previous)
+	currentFlashcard.RemoveFrom(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+	currentFlashcard.RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
 
 	nextFlashCard.
 		ToTelegramMessageToMemorize().

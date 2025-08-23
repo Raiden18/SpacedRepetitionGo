@@ -17,11 +17,18 @@ func NewFlashcardTelegramMessageToMemorize(flashcard Flashcard) FlashcardTelegra
 }
 
 func (message FlashcardTelegramMessageToMemorize) GetButtons() *tgbotapi.InlineKeyboardMarkup {
+	navigationButtons := []tgbotapi.InlineKeyboardButton{}
+	if message.Flashcard.Previous != nil {
+		navigationButtons = append(navigationButtons, previousButton(message.Flashcard))
+	}
+	if message.Flashcard.Next != nil {
+		navigationButtons = append(navigationButtons, newNextButton(message.Flashcard))
+	}
 	rows := [][]tgbotapi.InlineKeyboardButton{
 		tgbotapi.NewInlineKeyboardRow(
 			newMemorizedButton(message.Flashcard),
-			newNextButton(message.Flashcard),
 		),
+		navigationButtons,
 		tgbotapi.NewInlineKeyboardRow(
 			newStartOverButton(message.Flashcard),
 		),
@@ -56,6 +63,16 @@ func newMemorizedButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 	)
 }
 
+func previousButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
+	return telegram.NewCallbackButton(
+		"⬅️ Previous",
+		Parameter(
+			PreviousMemorizingFlashCardKey(),
+			*flashcard.Previous,
+		),
+	)
+}
+
 func newNextButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 	return telegram.NewCallbackButton(
 		"Next ➡️",
@@ -78,6 +95,10 @@ func newStartOverButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 
 func NextMemorizingFlashCardKey() string {
 	return "nextFlashCardId"
+}
+
+func PreviousMemorizingFlashCardKey() string {
+	return "previousFlashCardId"
 }
 
 func MemorizedMemorizingFlashCardKey() string {
