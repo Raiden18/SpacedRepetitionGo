@@ -157,7 +157,7 @@ func (flashcard Flashcard) UpdateLinkedFlashCards(db sqlx.DB, tableName string) 
 	query := `UPDATE ` + tableName + ` SET previous=?, next=? WHERE page_id =?;`
 	_, err := db.Exec(query, flashcard.Previous, flashcard.Next, flashcard.Id)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Could not update linked flash cards", err)
 	}
 }
 
@@ -174,7 +174,7 @@ func GetFormBox(db sqlx.DB, boxId string, tableName string) Flashcard {
 	entity := FlashcardEntity{}
 	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE notion_data_base_id=?", boxId)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("Could not get from box. TableName="+tableName, err)
 	}
 	return toFlashcard(entity)
 }
@@ -216,7 +216,7 @@ func GetFromDdById(db sqlx.DB, id string, tableName string) Flashcard {
 	entity := FlashcardEntity{}
 	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE page_id=?", id)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("Could not get by id. TableName="+tableName, err)
 	}
 	return toFlashcard(entity)
 }
@@ -224,7 +224,7 @@ func GetFromDdById(db sqlx.DB, id string, tableName string) Flashcard {
 func (flashcard Flashcard) RemoveFromDb(db sqlx.DB, tableName string) {
 	_, err := db.Exec(`DELETE FROM `+tableName+` WHERE page_id = ?`, flashcard.Id)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("Could not deleted From Table. TableName="+tableName, err)
 	}
 }
 
@@ -279,7 +279,7 @@ func InsertIntoDB(db sqlx.DB, flashCards []Flashcard, tableName string) {
 	 );`
 	_, err := db.NamedExec(query, entities)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Could not insert into DB. TableName="+tableName, err)
 	}
 }
 
