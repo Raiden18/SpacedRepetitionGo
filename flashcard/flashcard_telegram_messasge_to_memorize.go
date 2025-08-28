@@ -17,15 +17,19 @@ func NewFlashcardTelegramMessageToMemorize(flashcard Flashcard) FlashcardTelegra
 }
 
 func (message FlashcardTelegramMessageToMemorize) GetButtons() *tgbotapi.InlineKeyboardMarkup {
-	navigationButtons := []tgbotapi.InlineKeyboardButton{}
+	toPreviosAndNext := []tgbotapi.InlineKeyboardButton{}
+	toStartAndEnd := []tgbotapi.InlineKeyboardButton{}
 	if message.Flashcard.Previous != nil {
-		navigationButtons = append(navigationButtons, previousButton(message.Flashcard))
+		toPreviosAndNext = append(toPreviosAndNext, previousButton(message.Flashcard))
+		toStartAndEnd = append(toStartAndEnd, toBeginningButton(message.Flashcard))
 	}
 	if message.Flashcard.Next != nil {
-		navigationButtons = append(navigationButtons, newNextButton(message.Flashcard))
+		toPreviosAndNext = append(toPreviosAndNext, newNextButton(message.Flashcard))
+		toStartAndEnd = append(toStartAndEnd, toEndButton(message.Flashcard))
 	}
 	rows := [][]tgbotapi.InlineKeyboardButton{
-		navigationButtons,
+		toPreviosAndNext,
+		toStartAndEnd,
 		tgbotapi.NewInlineKeyboardRow(
 			newMemorizedButton(message.Flashcard),
 			finishMemorizingButton(message.Flashcard),
@@ -91,6 +95,26 @@ func finishMemorizingButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 	)
 }
 
+func toEndButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
+	return telegram.NewCallbackButton(
+		"To the end ⏭️",
+		Parameter(
+			EndKey(),
+			flashcard.Id,
+		),
+	)
+}
+
+func toBeginningButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
+	return telegram.NewCallbackButton(
+		"To the beginning ⏮️",
+		Parameter(
+			BeginingKey(),
+			flashcard.Id,
+		),
+	)
+}
+
 func NextMemorizingFlashCardKey() string {
 	return "nextFlashCardId"
 }
@@ -105,4 +129,12 @@ func MemorizedMemorizingFlashCardKey() string {
 
 func FinishMemorizinKey() string {
 	return "finishMemorizing"
+}
+
+func EndKey() string {
+	return "endFlashcard"
+}
+
+func BeginingKey() string {
+	return "beginingFlashcard"
 }

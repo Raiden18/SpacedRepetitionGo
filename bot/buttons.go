@@ -14,7 +14,8 @@ import (
 type ButtonCallbackFunc func(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client)
 
 func RespondToPressedButtons(update tgbotapi.Update, tg telegram.Bot, db sqlx.DB, client notion.Client) {
-	key := strings.Split(update.CallbackQuery.Data, "=")[0]
+	key := strings.
+		Split(update.CallbackQuery.Data, "=")[0]
 	buttons := createButtons()
 	pressedButtonCallback := buttons[key]
 	pressedButtonCallback(update, tg, db, client)
@@ -31,7 +32,27 @@ func createButtons() map[string]ButtonCallbackFunc {
 		flashcard.PreviousMemorizingFlashCardKey():  onPreviousButtonOfMemorizingFlashcardClicked,
 		flashcard.FinishMemorizinKey():              onFinishedMemorizingButtonClicked,
 		flashcard.MemorizedMemorizingFlashCardKey(): onMemorizedButtonOfFlashcardClicked,
+		flashcard.EndKey():                          onToEndClicked,
+		flashcard.BeginingKey():                     onToBeginingClicked,
 	}
+}
+
+func onToEndClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+	currentFlashCard := flashcard.NewMemorizingFlashcardFromDb(db, fetchValue(update.CallbackData()))
+	fristFlasCard := flashcard.GetFirst(db, currentFlashCard.BoxId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+	fristFlasCard.
+		ToTelegramMessageToMemorize().
+		SendToTelegram(bot)
+	currentFlashCard.RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
+}
+
+func onToBeginingClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+	currentFlashCard := flashcard.NewMemorizingFlashcardFromDb(db, fetchValue(update.CallbackData()))
+	lastFlashCard := flashcard.GetLast(db, currentFlashCard.BoxId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+	lastFlashCard.
+		ToTelegramMessageToMemorize().
+		SendToTelegram(bot)
+	currentFlashCard.RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
 }
 
 func onBoxButtonToReviseClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
