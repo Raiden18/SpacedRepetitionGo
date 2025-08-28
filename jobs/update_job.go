@@ -33,15 +33,8 @@ func Update() {
 		),
 	)
 
-	pagesToRevise := fetchFlashCards(boxes, notionClient, &reviseFlashcardsRequest)
-	pagesToMemorize := fetchFlashCards(boxes, notionClient, &memorizeFlashcardsRequest)
-
-	flashCardsToRevise := orderFlashCards(
-		flashcard.NewFlashCards(pagesToRevise),
-	)
-	flashCardsToMemorize := orderFlashCards(
-		flashcard.NewFlashCards(pagesToMemorize),
-	)
+	flashCardsToRevise := fetchFlashCards(boxes, notionClient, &reviseFlashcardsRequest)
+	flashCardsToMemorize := fetchFlashCards(boxes, notionClient, &memorizeFlashcardsRequest)
 
 	box.ClearTable(db)
 	box.InsertIntoDB(db, boxes)
@@ -55,11 +48,11 @@ func Update() {
 	defer db.Close()
 }
 
-func fetchFlashCards(boxes []box.Box, client notion.Client, request *notionApi.DatabaseQueryRequest) []notionApi.Page {
+func fetchFlashCards(boxes []box.Box, client notion.Client, request *notionApi.DatabaseQueryRequest) []flashcard.Flashcard {
 	var (
-		wg    sync.WaitGroup
-		mutex sync.Mutex
-		pages []notionApi.Page
+		wg               sync.WaitGroup
+		mutex            sync.Mutex
+		flashCardsResult []flashcard.Flashcard
 	)
 
 	for _, box_ := range boxes {
@@ -67,14 +60,16 @@ func fetchFlashCards(boxes []box.Box, client notion.Client, request *notionApi.D
 		go func(b box.Box) {
 			defer wg.Done()
 			dbPages := client.FetchPagesFromDb(b.Id, request)
+			flashCards := flashcard.NewFlashCards(dbPages)
+			orderedFlashCards := orderFlashCards(flashCards)
 			mutex.Lock()
-			pages = append(pages, dbPages...)
+			flashCardsResult = append(flashCardsResult, orderedFlashCards...)
 			mutex.Unlock()
 		}(box_)
 	}
 
 	wg.Wait()
-	return pages
+	return flashCardsResult
 }
 
 func fetchFromNotion(

@@ -14,8 +14,7 @@ import (
 type ButtonCallbackFunc func(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client)
 
 func RespondToPressedButtons(update tgbotapi.Update, tg telegram.Bot, db sqlx.DB, client notion.Client) {
-	key := strings.
-		Split(update.CallbackQuery.Data, "=")[0]
+	key := strings.Split(update.CallbackQuery.Data, "=")[0]
 	buttons := createButtons()
 	pressedButtonCallback := buttons[key]
 	pressedButtonCallback(update, tg, db, client)
