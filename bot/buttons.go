@@ -39,7 +39,7 @@ func createButtons() map[string]ButtonCallbackFunc {
 
 func onToEndClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
 	currentFlashCard := flashcard.NewMemorizingFlashcardFromDb(db, fetchValue(update.CallbackData()))
-	fristFlasCard := flashcard.GetFirst(db, currentFlashCard.BoxId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+	fristFlasCard := flashcard.GetLast(db, currentFlashCard.BoxId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
 	fristFlasCard.
 		ToTelegramMessageToMemorize().
 		SendToTelegram(bot)
@@ -48,7 +48,7 @@ func onToEndClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client
 
 func onToBeginingClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
 	currentFlashCard := flashcard.NewMemorizingFlashcardFromDb(db, fetchValue(update.CallbackData()))
-	lastFlashCard := flashcard.GetLast(db, currentFlashCard.BoxId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
+	lastFlashCard := flashcard.GetFirst(db, currentFlashCard.BoxId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
 	lastFlashCard.
 		ToTelegramMessageToMemorize().
 		SendToTelegram(bot)
