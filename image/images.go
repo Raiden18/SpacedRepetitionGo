@@ -22,6 +22,7 @@ func ReduceImageSizeOfBigImage(filePath string) {
 
 	if err != nil {
 		log.Println("failed to open image: "+filePath, err)
+		return
 	}
 
 	width := img.Bounds().Dx()
