@@ -14,6 +14,16 @@ import (
 	"strings"
 )
 
+func ConvertPngToJpg(filePath string) {
+	newPath := strings.TrimSuffix(filePath, ".png") + ".jpg"
+	cmd := exec.Command("convert", filePath, newPath)
+	error := cmd.Run()
+	if error != nil {
+		log.Println("Could not convert png to jpg", error)
+	}
+	os.Remove(filePath)
+}
+
 func ConvertHtmtoJpg(filePath string) {
 	newPath := strings.TrimSuffix(filePath, ".htm") + ".png"
 	cmd := exec.Command("wkhtmltoimage", filePath, newPath)
@@ -22,7 +32,6 @@ func ConvertHtmtoJpg(filePath string) {
 		log.Println("Could not convert htm to png", error)
 	}
 	os.Remove(filePath)
-	convertPngToJpg(newPath)
 }
 
 func ConvertJfifToJpg(filePath string) {
@@ -33,7 +42,7 @@ func ConvertJfifToJpg(filePath string) {
 	}
 }
 
-func ConvertSVGtoJpg(svgPath string) {
+func ConvertSvgToPng(svgPath string) {
 	ext := filepath.Ext(svgPath)
 	base := strings.TrimSuffix(svgPath, ext)
 	pngPath := base + ".png"
@@ -44,7 +53,6 @@ func ConvertSVGtoJpg(svgPath string) {
 	}
 
 	os.Remove(svgPath)
-	convertPngToJpg(pngPath)
 }
 
 func ConvertBase64ToImage(base64Str, outputFolder, baseFilename string) {
@@ -109,14 +117,4 @@ func saveJPEG(path string, img image.Image) {
 	if error != nil {
 		log.Println("Could not save image in file. filePath : " + path)
 	}
-}
-
-func convertPngToJpg(filePath string) {
-	newPath := strings.TrimSuffix(filePath, ".png") + ".jpg"
-	cmd := exec.Command("convert", filePath, newPath)
-	error := cmd.Run()
-	if error != nil {
-		log.Println("Could not convert png to jpg", error)
-	}
-	os.Remove(filePath)
 }

@@ -36,13 +36,17 @@ func ReplaceImages() {
 
 	downloadImages(client, imagesFolder, allFlashCards)
 
-	converts := map[string]func(path string){
+	firstRoundCoverters := map[string]func(path string){
 		".jfif": image.ConvertJfifToJpg,
 		".htm":  image.ConvertHtmtoJpg,
-		".svg":  image.ConvertSVGtoJpg,
+		".svg":  image.ConvertSvgToPng,
+	}
+	secondRoundCoverters := map[string]func(path string){
+		".png": image.ConvertPngToJpg,
 	}
 
-	image.FindFilesAndConvert(imagesFolder, converts)
+	image.FindFilesAndConvert(imagesFolder, firstRoundCoverters)
+	image.FindFilesAndConvert(imagesFolder, secondRoundCoverters)
 
 	utils.ForEach(
 		flashCardsToRevise,
