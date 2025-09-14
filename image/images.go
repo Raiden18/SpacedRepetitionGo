@@ -12,18 +12,32 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/disintegration/imaging"
 )
 
 func ReduceImageSizeOfBigImage(filePath string) {
-	commandBuffer := bytes.Buffer{}
-	commandBuffer.WriteString("convert ")
-	commandBuffer.WriteString(filePath)
-	commandBuffer.WriteString(" -resize 4096x4096\\> ")
-	commandBuffer.WriteString(filePath)
+	img, err := imaging.Open(filePath)
+	maxTelegramAllowedSize := 4096
 
-	cmd := exec.Command(commandBuffer.String())
-	if err := cmd.Run(); err != nil {
-		log.Println("Could not resize image", err)
+	if err != nil {
+		log.Println("failed to open image: %v", err)
+	}
+
+	width := img.Bounds().Dx()
+	height := img.Bounds().Dy()
+
+	var resized *image.NRGBA
+
+	if width > maxTelegramAllowedSize || height > maxTelegramAllowedSize {
+		resized = imaging.Fit(img, maxTelegramAllowedSize, maxTelegramAllowedSize, imaging.Lanczos)
+	} else {
+		resized = imaging.Clone(img)
+	}
+
+	err = imaging.Save(resized, filePath)
+	if err != nil {
+		log.Fatalf("failed to save image: %v", err)
 	}
 }
 
