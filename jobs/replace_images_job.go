@@ -48,6 +48,8 @@ func ReplaceImages() {
 	image.FindFilesAndConvert(imagesFolder, firstRoundCoverters)
 	image.FindFilesAndConvert(imagesFolder, secondRoundCoverters)
 
+	image.DoForEachFile(imagesFolder, image.ReduceImageSizeOfBigImage)
+
 	utils.ForEach(
 		flashCardsToRevise,
 		func(f flashcard.Flashcard) {

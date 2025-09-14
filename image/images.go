@@ -14,6 +14,19 @@ import (
 	"strings"
 )
 
+func ReduceImageSizeOfBigImage(filePath string) {
+	commandBuffer := bytes.Buffer{}
+	commandBuffer.WriteString("convert ")
+	commandBuffer.WriteString(filePath)
+	commandBuffer.WriteString(" -resize 4096x4096\\> ")
+	commandBuffer.WriteString(filePath)
+
+	cmd := exec.Command(commandBuffer.String())
+	if err := cmd.Run(); err != nil {
+		log.Println("Could not resize image", err)
+	}
+}
+
 func ConvertPngToJpg(filePath string) {
 	newPath := strings.TrimSuffix(filePath, ".png") + ".jpg"
 	cmd := exec.Command("convert", filePath, newPath)

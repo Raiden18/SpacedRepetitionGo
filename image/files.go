@@ -35,6 +35,23 @@ func DeleteAllFilesFromFolder(folder string) {
 	}
 }
 
+func DoForEachFile(folder string, doFunc func(path string)) {
+	filepath.WalkDir(folder, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			log.Println(err)
+			return nil
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		lowerName := strings.ToLower(d.Name())
+		doFunc(lowerName)
+		return nil
+	})
+}
+
 func FindFilesAndConvert(folder string, converters map[string]func(path string)) {
 	filepath.WalkDir(folder, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
