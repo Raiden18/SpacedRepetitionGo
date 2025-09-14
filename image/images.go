@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-func ConvertHtmtoPng(filePath string) {
+func ConvertHtmtoJpg(filePath string) {
 	newPath := strings.TrimSuffix(filePath, ".htm") + ".png"
 	cmd := exec.Command("wkhtmltoimage", filePath, newPath)
 	error := cmd.Run()
@@ -22,6 +22,7 @@ func ConvertHtmtoPng(filePath string) {
 		log.Println("Could not convert htm to png", error)
 	}
 	os.Remove(filePath)
+	convertPngToJpg(newPath)
 }
 
 func ConvertJfifToJpg(filePath string) {
@@ -32,7 +33,7 @@ func ConvertJfifToJpg(filePath string) {
 	}
 }
 
-func ConvertSVGtoPNG(svgPath string) {
+func ConvertSVGtoJpg(svgPath string) {
 	ext := filepath.Ext(svgPath)
 	base := strings.TrimSuffix(svgPath, ext)
 	pngPath := base + ".png"
@@ -43,6 +44,7 @@ func ConvertSVGtoPNG(svgPath string) {
 	}
 
 	os.Remove(svgPath)
+	convertPngToJpg(pngPath)
 }
 
 func ConvertBase64ToImage(base64Str, outputFolder, baseFilename string) {
@@ -63,16 +65,17 @@ func ConvertBase64ToImage(base64Str, outputFolder, baseFilename string) {
 		return
 	}
 
-	var ext string
-	switch format {
-	case "jpeg":
-		ext = ".jpg"
-	case "png":
-		ext = ".png"
-	case "gif":
-		ext = ".gif"
-	default:
+	extMap := map[string]string{
+		"jpeg": ".jpg",
+		"png":  ".png",
+		"gif":  ".gif",
+	}
+
+	ext, hasKey := extMap[format]
+
+	if !hasKey {
 		log.Println("Could not decode base64 image. Unsupported image formag: " + format)
+		return
 	}
 
 	outputPath := outputFolder + "/" + baseFilename + ext
@@ -106,4 +109,14 @@ func saveJPEG(path string, img image.Image) {
 	if error != nil {
 		log.Println("Could not save image in file. filePath : " + path)
 	}
+}
+
+func convertPngToJpg(filePath string) {
+	newPath := strings.TrimSuffix(filePath, ".png") + ".jpg"
+	cmd := exec.Command("convert", filePath, newPath)
+	error := cmd.Run()
+	if error != nil {
+		log.Println("Could not convert png to jpg", error)
+	}
+	os.Remove(filePath)
 }

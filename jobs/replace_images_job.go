@@ -38,8 +38,8 @@ func ReplaceImages() {
 
 	converts := map[string]func(path string){
 		".jfif": image.ConvertJfifToJpg,
-		".htm":  image.ConvertHtmtoPng,
-		".svg":  image.ConvertSVGtoPNG,
+		".htm":  image.ConvertHtmtoJpg,
+		".svg":  image.ConvertSVGtoJpg,
 	}
 
 	image.FindFilesAndConvert(imagesFolder, converts)
