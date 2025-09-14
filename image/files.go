@@ -47,7 +47,8 @@ func DoForEachFile(folder string, doFunc func(path string)) {
 		}
 
 		lowerName := strings.ToLower(d.Name())
-		doFunc(lowerName)
+		fullPath := filepath.Join(folder, lowerName)
+		doFunc(fullPath)
 		return nil
 	})
 }

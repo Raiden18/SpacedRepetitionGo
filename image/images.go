@@ -21,7 +21,7 @@ func ReduceImageSizeOfBigImage(filePath string) {
 	maxTelegramAllowedSize := 4096
 
 	if err != nil {
-		log.Println("failed to open image: %v", err)
+		log.Println("failed to open image: "+filePath, err)
 	}
 
 	width := img.Bounds().Dx()
