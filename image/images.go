@@ -24,7 +24,7 @@ func ConvertPngToJpg(filePath string) {
 	os.Remove(filePath)
 }
 
-func ConvertHtmtoJpg(filePath string) {
+func ConvertHtmtoPng(filePath string) {
 	newPath := strings.TrimSuffix(filePath, ".htm") + ".png"
 	cmd := exec.Command("wkhtmltoimage", filePath, newPath)
 	error := cmd.Run()
