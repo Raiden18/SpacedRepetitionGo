@@ -52,16 +52,6 @@ func ConvertPngToJpg(filePath string) {
 	os.Remove(filePath)
 }
 
-func ConvertHtmtoPng(filePath string) {
-	newPath := strings.TrimSuffix(filePath, ".htm") + ".png"
-	cmd := exec.Command("wkhtmltoimage", filePath, newPath)
-	error := cmd.Run()
-	if error != nil {
-		log.Println("Could not convert htm to png", error)
-	}
-	os.Remove(filePath)
-}
-
 func ConvertJfifToJpg(filePath string) {
 	newPath := strings.TrimSuffix(filePath, ".jfif") + ".jpg"
 	err := os.Rename(filePath, newPath)
