@@ -59,12 +59,12 @@ func newMemorizedButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 	return telegram.NewCallbackButton(
 		"Memorized ✅",
 		Parameter(
-			MemorizedMemorizingFlashCardKey(),
+			MemorizedFlashCardKey(),
 			flashcard.Id,
 		),
 	)
 }
 
-func MemorizedMemorizingFlashCardKey() string {
+func MemorizedFlashCardKey() string {
 	return "memorizeFlashCardId"
 }

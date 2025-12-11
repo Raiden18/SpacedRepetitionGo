@@ -183,20 +183,20 @@ func GetLast(db sqlx.DB, boxId string, tableName string) *Flashcard {
 	entity := FlashcardEntity{}
 	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE notion_data_base_id=? AND next IS NULL", boxId)
 	if err != nil {
-		log.Fatalln("Could not get last item. TableName="+tableName, err)
 		return nil
 	}
 	flashcard := toFlashcard(entity)
 	return &flashcard
 }
 
-func GetFirst(db sqlx.DB, boxId string, tableName string) Flashcard {
+func GetFirst(db sqlx.DB, boxId string, tableName string) *Flashcard {
 	entity := FlashcardEntity{}
 	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE notion_data_base_id=? AND previous IS NULL", boxId)
 	if err != nil {
-		log.Fatalln("Could not get first item. TableName="+tableName, err)
+		return nil
 	}
-	return toFlashcard(entity)
+	flashCard := toFlashcard(entity)
+	return &flashCard
 }
 
 func GetNextFromDb(db sqlx.DB, currentFlashcard Flashcard, tableName string) *Flashcard {
