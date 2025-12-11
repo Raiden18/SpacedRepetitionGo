@@ -27,10 +27,10 @@ type Flashcard struct {
 
 func NewMemorizingFlashcardFromDb(db sqlx.DB, id string) *Flashcard {
 	flashCard := GetFromDdById(db, id, FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	return &flashCard
+	return flashCard
 }
 
-func NewRevisingFlashcardcFromDbById(db sqlx.DB, id string) Flashcard {
+func NewRevisingFlashcardcFromDbById(db sqlx.DB, id string) *Flashcard {
 	return GetFromDdById(db, id, FLASH_CARDS_TO_REVISE_TABLE)
 }
 

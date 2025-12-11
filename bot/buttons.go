@@ -192,7 +192,7 @@ func onPreviousFlashcardButtonClicked(update tgbotapi.Update, bot telegram.Bot, 
 	if previousFlashCard == nil {
 		previousFlashCard = flashcard.NewRevisingFlashcardFromDbByBoxId(db, previousFlashcardId)
 		previousFlashCard.
-			ToTelegramMessageToMemorize().
+			ToTelegramMessageToRevise().
 			SendToTelegram(bot)
 	} else {
 		previousFlashCard.
@@ -209,7 +209,7 @@ func onNextFlashcardButtonClicked(update tgbotapi.Update, bot telegram.Bot, db s
 	if nextFlashCard == nil {
 		nextFlashCard = flashcard.NewRevisingFlashcardFromDbByBoxId(db, nextFlashcardId)
 		nextFlashCard.
-			ToTelegramMessageToMemorize().
+			ToTelegramMessageToRevise().
 			SendToTelegram(bot)
 	} else {
 		nextFlashCard.
