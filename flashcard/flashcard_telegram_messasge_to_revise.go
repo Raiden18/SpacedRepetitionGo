@@ -25,19 +25,15 @@ func (message *FlashcardTelegramMessageToRevise) SendToTelegram(bot telegram.Bot
 
 func (message FlashcardTelegramMessageToRevise) GetButtons() *tgbotapi.InlineKeyboardMarkup {
 	toPreviosAndNext := []tgbotapi.InlineKeyboardButton{}
-	toStartAndEnd := []tgbotapi.InlineKeyboardButton{}
 	if message.Flashcard.Previous != nil {
 		toPreviosAndNext = append(toPreviosAndNext, previousButton(message.Flashcard))
-		toStartAndEnd = append(toStartAndEnd, toBeginningButton(message.Flashcard))
 	}
 	if message.Flashcard.Next != nil {
 		toPreviosAndNext = append(toPreviosAndNext, nextButton(message.Flashcard))
-		toStartAndEnd = append(toStartAndEnd, toEndButton(message.Flashcard))
 	}
 
 	rows := [][]tgbotapi.InlineKeyboardButton{
 		toPreviosAndNext,
-		toStartAndEnd,
 		tgbotapi.NewInlineKeyboardRow(
 			newForgotButton(message.Flashcard),
 			newRecalledButton(message.Flashcard),
