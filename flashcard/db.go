@@ -212,13 +212,15 @@ func GetNextFromDb(db sqlx.DB, currentFlashcard Flashcard, tableName string) *Fl
 	return &nextFlashcard
 }
 
-func GetFromDdById(db sqlx.DB, id string, tableName string) Flashcard {
+func GetFromDdById(db sqlx.DB, id string, tableName string) *Flashcard {
 	entity := FlashcardEntity{}
 	err := db.Get(&entity, "SELECT * FROM "+tableName+" WHERE page_id=?", id)
 	if err != nil {
-		log.Fatalln("Could not get by id. TableName="+tableName, err)
+		log.Println("Could not get by id. TableName="+tableName, err)
+		return nil
 	}
-	return toFlashcard(entity)
+	flashCard := toFlashcard(entity)
+	return &flashCard
 }
 
 func (flashcard Flashcard) RemoveFromDb(db sqlx.DB, tableName string) {
