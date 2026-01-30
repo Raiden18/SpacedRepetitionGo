@@ -48,6 +48,7 @@ func ReplaceImages() {
 
 	firstRoundCoverters := map[string]func(path string){
 		".jfif": image.ConvertJfifToJpg,
+		".webp": image.ConvertWebpToJpg,
 		".svg":  image.ConvertSvgToPng,
 	}
 	secondRoundCoverters := map[string]func(path string){

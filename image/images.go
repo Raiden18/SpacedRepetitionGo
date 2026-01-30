@@ -59,7 +59,8 @@ func ReduceImageSizeOfBigImage(filePath string) {
 }
 
 func ConvertPngToJpg(filePath string) {
-	newPath := strings.TrimSuffix(filePath, ".png") + ".jpg"
+	ext := filepath.Ext(filePath)
+	newPath := strings.TrimSuffix(filePath, ext) + ".jpg"
 	tmpFile, err := os.CreateTemp(filepath.Dir(newPath), filepath.Base(newPath)+".tmp-*")
 	if err != nil {
 		log.Println("Could not create temp file for png conversion", err)
@@ -83,8 +84,35 @@ func ConvertPngToJpg(filePath string) {
 	os.Remove(filePath)
 }
 
+func ConvertWebpToJpg(filePath string) {
+	ext := filepath.Ext(filePath)
+	newPath := strings.TrimSuffix(filePath, ext) + ".jpg"
+	tmpFile, err := os.CreateTemp(filepath.Dir(newPath), filepath.Base(newPath)+".tmp-*")
+	if err != nil {
+		log.Println("Could not create temp file for webp conversion", err)
+		return
+	}
+	tmpPath := tmpFile.Name()
+	tmpFile.Close()
+
+	cmd := exec.Command("convert", filePath, tmpPath)
+	error := cmd.Run()
+	if error != nil {
+		log.Println("Could not convert webp to jpg", error)
+		os.Remove(tmpPath)
+		return
+	}
+	if err := os.Rename(tmpPath, newPath); err != nil {
+		log.Println("Could not move converted jpg into place", err)
+		os.Remove(tmpPath)
+		return
+	}
+	os.Remove(filePath)
+}
+
 func ConvertJfifToJpg(filePath string) {
-	newPath := strings.TrimSuffix(filePath, ".jfif") + ".jpg"
+	ext := filepath.Ext(filePath)
+	newPath := strings.TrimSuffix(filePath, ext) + ".jpg"
 	err := os.Rename(filePath, newPath)
 	if err != nil {
 		log.Println("Could not convert Jfif to Jpg.", err)
