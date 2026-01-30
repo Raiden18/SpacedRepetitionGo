@@ -39,7 +39,7 @@ func InsertIntoDB(db sqlx.DB, boxes []Box) {
 
 func insertBox(db sqlx.DB, box Box) {
 	_, err := db.NamedExec(
-		`INSERT INTO `+BOX_TABLE_NAME+` (id, text) VALUES (:id, :text);`,
+		`INSERT IGNORE INTO `+BOX_TABLE_NAME+` (id, text) VALUES (:id, :text);`,
 		box,
 	)
 	if err != nil {

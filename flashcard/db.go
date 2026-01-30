@@ -291,3 +291,25 @@ func ClearTable(db sqlx.DB, tableName string) {
 		log.Fatal(err)
 	}
 }
+
+func GetAllIds(db sqlx.DB, tableName string) []string {
+	ids := []string{}
+	err := db.Select(&ids, "SELECT page_id FROM "+tableName)
+	if err != nil {
+		log.Fatalln("Could not get all ids. TableName="+tableName, err)
+	}
+	return ids
+}
+
+func DeleteMissing(db sqlx.DB, tableName string, existingIds map[string]struct{}) {
+	ids := GetAllIds(db, tableName)
+	for _, id := range ids {
+		if _, ok := existingIds[id]; ok {
+			continue
+		}
+		_, err := db.Exec(`DELETE FROM `+tableName+` WHERE page_id = ?`, id)
+		if err != nil {
+			log.Fatalln("Could not delete missing id. TableName="+tableName, err)
+		}
+	}
+}
