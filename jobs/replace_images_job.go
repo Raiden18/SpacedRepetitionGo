@@ -21,8 +21,10 @@ func ReplaceImages() {
 	client := resty.New()
 	imagesFolder := "/root/repetition/images/"
 	image.CreateFolderIfNotExist(imagesFolder)
+	log.Println("Load Image Cache")
 	cache := image.LoadImageCache(imagesFolder)
 
+	log.Println("Fetch Flashcards")
 	flashCardsToRevise := utils.Filter(
 		flashcard.NewFlashcardsFromDb(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE),
 		flashcard.HasImage,
@@ -37,6 +39,8 @@ func ReplaceImages() {
 	for _, f := range allFlashCards {
 		keepBaseNames[f.Id] = struct{}{}
 	}
+
+	log.Println("Delete files not in set")
 	image.DeleteFilesNotInSet(imagesFolder, keepBaseNames)
 	for key := range cache.Entries {
 		if _, ok := keepBaseNames[key]; !ok {
@@ -44,8 +48,11 @@ func ReplaceImages() {
 		}
 	}
 
+	log.Println("Download images")
 	downloadImages(client, imagesFolder, allFlashCards, &cache)
+	log.Println("Downloaded images")
 
+	log.Println("Begin convertation")
 	firstRoundCoverters := map[string]func(path string){
 		".jfif": image.ConvertJfifToJpg,
 		".webp": image.ConvertWebpToJpg,
@@ -57,11 +64,19 @@ func ReplaceImages() {
 
 	image.FindFilesAndConvert(imagesFolder, firstRoundCoverters)
 	image.FindFilesAndConvert(imagesFolder, secondRoundCoverters)
+	log.Println("End convertation")
 
+	log.Println("Begin ReduceImageSizeOfBigImage")
 	image.DoForEachFile(imagesFolder, image.ReduceImageSizeOfBigImage)
+	log.Println("End ReduceImageSizeOfBigImage")
 
+	log.Println("Begin updateCacheEntriesAfterConversion")
 	updateCacheEntriesAfterConversion(&cache, imagesFolder)
+	log.Println("End updateCacheEntriesAfterConversion")
+
+	log.Println("Begin SaveImageCache")
 	image.SaveImageCache(imagesFolder, cache)
+	log.Println("End SaveImageCache")
 
 	utils.ForEach(
 		flashCardsToRevise,
