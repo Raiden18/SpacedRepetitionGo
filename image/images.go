@@ -47,7 +47,7 @@ func ReduceImageSizeOfBigImage(filePath string) {
 
 	err = imaging.Save(resized, tmpPath)
 	if err != nil {
-		log.Println("failed to save image: %v", err)
+		log.Printf("failed to save image: %v\n", err)
 		os.Remove(tmpPath)
 		return
 	}
