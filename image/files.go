@@ -1,6 +1,7 @@
 package image
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 	"io"
@@ -71,6 +72,13 @@ func FindFilesAndConvert(folder string, converters map[string]func(path string))
 			return nil
 		}
 
+		if converter, ok := converters[".webp"]; ok {
+			if IsWebpFile(path) {
+				converter(path)
+				return nil
+			}
+		}
+
 		lowerName := strings.ToLower(d.Name())
 
 		for ext, converter := range converters {
@@ -110,6 +118,22 @@ func FindFileByNameWithoutExt(folderPath, baseName string) (string, error) {
 func HasFileWithBaseName(folderPath, baseName string) bool {
 	_, err := FindFileByNameWithoutExt(folderPath, baseName)
 	return err == nil
+}
+
+func IsWebpFile(path string) bool {
+	file, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+
+	header := make([]byte, 12)
+	n, err := io.ReadFull(file, header)
+	if err != nil || n < 12 {
+		return false
+	}
+
+	return bytes.Equal(header[0:4], []byte("RIFF")) && bytes.Equal(header[8:12], []byte("WEBP"))
 }
 
 func saveImage(path string, image image.Image, encode func(w io.Writer, image image.Image) error) error {
