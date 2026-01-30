@@ -78,6 +78,8 @@ func ReplaceImages() {
 	)
 }
 
+const fallbackImageURL = "https://img.freepik.com/free-vector/hand-drawn-404-error_23-2147746234.jpg"
+
 func downloadImage(client *resty.Client, url, folder, baseFilename string, cache *image.ImageCache) {
 	entry, hasEntry := cache.Entries[baseFilename]
 	if hasEntry && entry.URL != "" && entry.URL != url {
@@ -85,6 +87,8 @@ func downloadImage(client *resty.Client, url, folder, baseFilename string, cache
 		entry = image.ImageCacheEntry{}
 		delete(cache.Entries, baseFilename)
 	}
+
+	fallbackUsed := false
 
 	req := client.R().
 		SetDoNotParseResponse(true).
@@ -133,6 +137,21 @@ func downloadImage(client *resty.Client, url, folder, baseFilename string, cache
 		defer resp.RawBody().Close()
 	}
 
+	if resp.StatusCode() == 404 {
+		resp.RawBody().Close()
+		resp, err = client.R().
+			SetDoNotParseResponse(true).
+			SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/115.0.0.0 Safari/537.36").
+			SetHeader("Accept", "image/jpeg,image/webp,image/*,*/*").
+			Get(fallbackImageURL)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer resp.RawBody().Close()
+		fallbackUsed = true
+	}
+
 	if !resp.IsSuccess() {
 		log.Printf("image download failed with status %d for %s", resp.StatusCode(), url)
 		return
@@ -179,13 +198,16 @@ func downloadImage(client *resty.Client, url, folder, baseFilename string, cache
 		log.Println(err)
 	}
 
-	cache.Entries[baseFilename] = image.ImageCacheEntry{
-		URL:          url,
-		ETag:         resp.Header().Get("ETag"),
-		LastModified: resp.Header().Get("Last-Modified"),
-		FileHash:     fileHash,
-		FileName:     filepath.Base(fullPath),
+	cacheEntry := image.ImageCacheEntry{
+		URL:      url,
+		FileHash: fileHash,
+		FileName: filepath.Base(fullPath),
 	}
+	if !fallbackUsed {
+		cacheEntry.ETag = resp.Header().Get("ETag")
+		cacheEntry.LastModified = resp.Header().Get("Last-Modified")
+	}
+	cache.Entries[baseFilename] = cacheEntry
 }
 
 func downloadImages(client *resty.Client, folder string, flashcard []flashcard.Flashcard, cache *image.ImageCache) {
