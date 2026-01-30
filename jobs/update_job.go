@@ -35,15 +35,11 @@ func Update() {
 
 	flashCardsToRevise := fetchFlashCards(boxes, notionClient, &reviseFlashcardsRequest)
 	flashCardsToMemorize := fetchFlashCards(boxes, notionClient, &memorizeFlashcardsRequest)
-	allNotionPageIds := fetchAllNotionPageIDs(boxes, notionClient)
 
 	box.InsertIntoDB(db, boxes)
 
-	flashcard.DeleteMissing(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE, allNotionPageIds)
-	insertFlashCards(db, flashCardsToRevise, flashcard.FLASH_CARDS_TO_REVISE_TABLE)
-
-	flashcard.DeleteMissing(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE, allNotionPageIds)
-	insertFlashCards(db, flashCardsToMemorize, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
+	syncFlashCards(db, flashCardsToRevise, flashcard.FLASH_CARDS_TO_REVISE_TABLE)
+	syncFlashCards(db, flashCardsToMemorize, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
 
 	defer db.Close()
 }
@@ -95,31 +91,6 @@ func fetchFromNotion(
 	return box.NewBoxes(databases)
 }
 
-func fetchAllNotionPageIDs(boxes []box.Box, client notion.Client) map[string]struct{} {
-	var (
-		wg    sync.WaitGroup
-		mutex sync.Mutex
-		ids   = map[string]struct{}{}
-	)
-	request := notionApi.DatabaseQueryRequest{}
-
-	for _, box_ := range boxes {
-		wg.Add(1)
-		go func(b box.Box) {
-			defer wg.Done()
-			pages := client.FetchPagesFromDb(b.Id, &request)
-			mutex.Lock()
-			for _, page := range pages {
-				ids[page.ID.String()] = struct{}{}
-			}
-			mutex.Unlock()
-		}(box_)
-	}
-
-	wg.Wait()
-	return ids
-}
-
 func orderFlashCards(flashCards []flashcard.Flashcard) []flashcard.Flashcard {
 	orderedFlashCards := make([]flashcard.Flashcard, len(flashCards))
 	for index, flashCard := range flashCards {
@@ -138,6 +109,16 @@ func orderFlashCards(flashCards []flashcard.Flashcard) []flashcard.Flashcard {
 		orderedFlashCards[index] = flashCard
 	}
 	return orderedFlashCards
+}
+
+func syncFlashCards(db sqlx.DB, flashCards []flashcard.Flashcard, tableName string) {
+	notionIds := make(map[string]struct{}, len(flashCards))
+	for _, card := range flashCards {
+		notionIds[card.Id] = struct{}{}
+	}
+
+	flashcard.DeleteMissing(db, tableName, notionIds)
+	insertFlashCards(db, flashCards, tableName)
 }
 
 func insertFlashCards(db sqlx.DB, flashCards []flashcard.Flashcard, tableName string) {
