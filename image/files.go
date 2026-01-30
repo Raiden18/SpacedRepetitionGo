@@ -17,19 +17,26 @@ func CreateFolderIfNotExist(folder string) {
 	}
 }
 
-func DeleteAllFilesFromFolder(folder string) {
-	d, err := os.Open(folder)
+func DeleteFilesNotInSet(folder string, keepBaseNames map[string]struct{}) {
+	entries, err := os.ReadDir(folder)
 	if err != nil {
 		log.Println(err)
+		return
 	}
-	defer d.Close()
-	names, err := d.Readdirnames(-1)
-	if err != nil {
-		log.Println(err)
-	}
-	for _, name := range names {
-		err = os.RemoveAll(filepath.Join(folder, name))
-		if err != nil {
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		name := entry.Name()
+		ext := filepath.Ext(name)
+		base := strings.TrimSuffix(name, ext)
+		if _, ok := keepBaseNames[base]; ok {
+			continue
+		}
+
+		if err := os.Remove(filepath.Join(folder, name)); err != nil {
 			log.Println(err)
 		}
 	}
@@ -100,12 +107,34 @@ func FindFileByNameWithoutExt(folderPath, baseName string) (string, error) {
 	return "", fmt.Errorf("file %q not found in %q", baseName, folderPath)
 }
 
+func HasFileWithBaseName(folderPath, baseName string) bool {
+	_, err := FindFileByNameWithoutExt(folderPath, baseName)
+	return err == nil
+}
+
 func saveImage(path string, image image.Image, encode func(w io.Writer, image image.Image) error) error {
-	outFile, err := os.Create(path)
+	dir := filepath.Dir(path)
+	tmpFile, err := os.CreateTemp(dir, filepath.Base(path)+".tmp-*")
 	if err != nil {
 		return err
 	}
-	defer outFile.Close()
+	tmpPath := tmpFile.Name()
 
-	return encode(outFile, image)
+	if err := encode(tmpFile, image); err != nil {
+		tmpFile.Close()
+		os.Remove(tmpPath)
+		return err
+	}
+
+	if err := tmpFile.Close(); err != nil {
+		os.Remove(tmpPath)
+		return err
+	}
+
+	if err := os.Rename(tmpPath, path); err != nil {
+		os.Remove(tmpPath)
+		return err
+	}
+
+	return nil
 }
