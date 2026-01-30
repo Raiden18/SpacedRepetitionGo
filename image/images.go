@@ -87,24 +87,8 @@ func ConvertPngToJpg(filePath string) {
 func ConvertWebpToJpg(filePath string) {
 	ext := filepath.Ext(filePath)
 	newPath := strings.TrimSuffix(filePath, ext) + ".jpg"
-	tmpFile, err := os.CreateTemp(filepath.Dir(newPath), filepath.Base(newPath)+".tmp-*")
-	if err != nil {
-		log.Println("Could not create temp file for webp conversion", err)
-		return
-	}
-	tmpPath := tmpFile.Name()
-	tmpFile.Close()
-
-	cmd := exec.Command("convert", filePath, tmpPath)
-	error := cmd.Run()
-	if error != nil {
-		log.Println("Could not convert webp to jpg", error)
-		os.Remove(tmpPath)
-		return
-	}
-	if err := os.Rename(tmpPath, newPath); err != nil {
-		log.Println("Could not move converted jpg into place", err)
-		os.Remove(tmpPath)
+	if err := exec.Command("convert", filePath, newPath).Run(); err != nil {
+		log.Println("Could not convert webp to jpg", err)
 		return
 	}
 	os.Remove(filePath)
