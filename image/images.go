@@ -36,25 +36,9 @@ func ReduceImageSizeOfBigImage(filePath string) {
 		resized = imaging.Clone(img)
 	}
 
-	dir := filepath.Dir(filePath)
-	tmpFile, err := os.CreateTemp(dir, filepath.Base(filePath)+".tmp-*")
-	if err != nil {
-		log.Println("failed to create temp image: "+filePath, err)
-		return
-	}
-	tmpPath := tmpFile.Name()
-	tmpFile.Close()
-
-	err = imaging.Save(resized, tmpPath)
+	err = imaging.Save(resized, filePath)
 	if err != nil {
 		log.Printf("failed to save image: %v\n", err)
-		os.Remove(tmpPath)
-		return
-	}
-
-	if err := os.Rename(tmpPath, filePath); err != nil {
-		log.Println("failed to replace image: "+filePath, err)
-		os.Remove(tmpPath)
 	}
 }
 
