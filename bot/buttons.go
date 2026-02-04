@@ -83,9 +83,14 @@ func onForgetButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, 
 
 	if flashcard.CountInDb(db, forgottenFlashcard.BoxId, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE) > 0 {
 		last := flashcard.GetLast(db, forgottenFlashcard.BoxId, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
-		last.Next = &forgottenFlashcard.Id
-		last.UpdateLinkedFlashCards(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
-		forgottenFlashcard.Previous = &last.Id
+		if last != nil {
+			last.Next = &forgottenFlashcard.Id
+			last.UpdateLinkedFlashCards(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
+			forgottenFlashcard.Previous = &last.Id
+		} else {
+			// Defensive: inconsistent links despite non-zero count.
+			forgottenFlashcard.Previous = nil
+		}
 	} else {
 		forgottenFlashcard.Previous = nil
 	}
