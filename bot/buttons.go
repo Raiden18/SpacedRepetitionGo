@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"log"
 	"spacedrepetitiongo/flashcard"
 	"spacedrepetitiongo/notification"
 	"spacedrepetitiongo/notion"
@@ -138,15 +137,10 @@ func sendNextFlashcardToRevise(db sqlx.DB, bot telegram.Bot, boxId string) {
 
 func onBoxButtonToMemorizeClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
 	boxId := fetchValue(update.CallbackData())
-	log.Println("Memorize box clicked:", boxId)
 	flashCards := flashcard.GetAllFromBdByBoxId(db, boxId, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
-	log.Println("Flashcards to memorize:", len(flashCards))
 	flashcard.ClearTable(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	log.Println("Cleared table")
 	flashcard.InsertIntoDB(db, flashCards, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	log.Println("Inserted into process table")
 	firstFlashCard := flashcard.GetFirst(db, boxId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	log.Println("Inserted into process table")
 	firstFlashCard.
 		ToTelegramMessageToMemorize().
 		SendToTelegram(bot)

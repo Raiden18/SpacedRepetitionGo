@@ -234,7 +234,7 @@ func (flashcard Flashcard) RemoveFromDb(db sqlx.DB, tableName string) {
 
 func InsertIntoDB(db sqlx.DB, flashCards []Flashcard, tableName string) {
 	entities := utils.Map(flashCards, toEntity)
-	query := `INSERT IGNORE INTO ` + tableName + ` (
+	query := `INSERT INTO ` + tableName + ` (
 		page_id, 
 		image_url, 
 		notion_data_base_id,
@@ -277,10 +277,31 @@ func InsertIntoDB(db sqlx.DB, flashCards []Flashcard, tableName string) {
 		:know_level_9,
 		:know_level_10,
 		:know_level_11,
-		:know_level_12,
+		:know_level_12, 
 		:know_level_13,
 		:know_level_14
-	 );`
+	 ) ON DUPLICATE KEY UPDATE
+		image_url=image_url,
+		notion_data_base_id=VALUES(notion_data_base_id),
+		name=VALUES(name),
+		example=VALUES(example),
+		answer=VALUES(answer),
+		next=VALUES(next),
+		previous=VALUES(previous),
+		know_level_1=VALUES(know_level_1),
+		know_level_2=VALUES(know_level_2),
+		know_level_3=VALUES(know_level_3),
+		know_level_4=VALUES(know_level_4),
+		know_level_5=VALUES(know_level_5),
+		know_level_6=VALUES(know_level_6),
+		know_level_7=VALUES(know_level_7),
+		know_level_8=VALUES(know_level_8),
+		know_level_9=VALUES(know_level_9),
+		know_level_10=VALUES(know_level_10),
+		know_level_11=VALUES(know_level_11),
+		know_level_12=VALUES(know_level_12),
+		know_level_13=VALUES(know_level_13),
+		know_level_14=VALUES(know_level_14);`
 	_, err := db.NamedExec(query, entities)
 	if err != nil {
 		log.Fatal("Could not insert into DB. TableName="+tableName, err)
