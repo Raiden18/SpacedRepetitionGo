@@ -125,24 +125,7 @@ func insertFlashCards(db sqlx.DB, flashCards []flashcard.Flashcard, tableName st
 	if len(flashCards) == 0 {
 		return
 	}
-
-	existingIds := flashcard.GetAllIds(db, tableName)
-	existing := make(map[string]struct{}, len(existingIds))
-	for _, id := range existingIds {
-		existing[id] = struct{}{}
-	}
-
-	toInsert := make([]flashcard.Flashcard, 0, len(flashCards))
-	for _, card := range flashCards {
-		if _, ok := existing[card.Id]; ok {
-			continue
-		}
-		toInsert = append(toInsert, card)
-	}
-
-	if len(toInsert) > 0 {
-		flashcard.InsertIntoDB(db, toInsert, tableName)
-	}
+	flashcard.InsertIntoDB(db, flashCards, tableName)
 }
 
 func KnowLevel(level int, equals bool) notionApi.PropertyFilter {
