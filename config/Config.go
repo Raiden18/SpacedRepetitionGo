@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"sync"
 
@@ -81,12 +80,27 @@ func NewConfigFromFile() Conf {
 }
 
 func secretsPath() string {
-	_, currentFile, _, ok := runtime.Caller(0)
-	if !ok {
-		log.Fatal("resolve config path: runtime caller unavailable")
+	if configPath := os.Getenv("SECRETS_PATH"); configPath != "" {
+		return configPath
 	}
 
-	return filepath.Join(filepath.Dir(currentFile), "..", "secrets.yaml")
+	workingDir, err := os.Getwd()
+	if err == nil {
+		candidate := filepath.Join(workingDir, "secrets.yaml")
+		if _, statErr := os.Stat(candidate); statErr == nil {
+			return candidate
+		}
+	}
+
+	executablePath, err := os.Executable()
+	if err == nil {
+		candidate := filepath.Join(filepath.Dir(executablePath), "secrets.yaml")
+		if _, statErr := os.Stat(candidate); statErr == nil {
+			return candidate
+		}
+	}
+
+	return "secrets.yaml"
 }
 
 func NewNotionDataBase(id string) NotionDataBase {

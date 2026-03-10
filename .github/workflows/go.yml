@@ -78,6 +78,12 @@ jobs:
         name: image_replacer
         path: ./image-replacer
 
+    - name: Upload secrets
+      uses: actions/upload-artifact@v4
+      with:
+        name: secrets_yaml
+        path: ./secrets.yaml
+
 
   deploy:
     runs-on: ubuntu-latest
@@ -110,6 +116,11 @@ jobs:
       with:
         name: image_replacer 
 
+    - name: Download secrets
+      uses: actions/download-artifact@v4
+      with:
+        name: secrets_yaml
+
     - name: Deploy to VPS
       env:
         VPS_USER: ${{ secrets.VPS_USER }}
@@ -131,6 +142,7 @@ jobs:
         ./initializer \
         ./bot \
         ./image-replacer \
+        ./secrets.yaml \
         "$VPS_USER@$VPS_HOST:~/repetition/go/"
 
         ssh -i ~/.ssh/id_rsa $VPS_USER@$VPS_HOST "cd ./repetition/go/ && sudo chmod +x ./* && sudo systemctl stop ktor.service && sudo systemctl start ktor.service" 
