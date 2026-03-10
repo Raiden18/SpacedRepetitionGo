@@ -17,7 +17,6 @@ func Update() {
 	db := utils.OpenDb()
 	notionClient := notion.NewClient()
 	observedDatabasesId := config.GetObservedDatabasesId()
-	log.Println("observedDatabasesId:", observedDatabasesId)
 	observedDatabases := fetchObservedDatabases(observedDatabasesId, notionClient)
 	boxes := fetchFromNotion(observedDatabases, notionClient)
 	reviseFlashcardsRequest := notion.NewDatabaseQueryRequest(
@@ -53,10 +52,10 @@ func fetchObservedDatabases(
 ) []string {
 	request := notion.NewEmptyDatabaseQueryRequest()
 	pages := client.FetchPagesFromDb(observedDatabasesId, &request)
-	log.Println("fetchObservedDatabases pages count:", len(pages))
 	databases := box.NewObservedDatabases(pages)
 	ids := []string{}
 	for _, database := range databases {
+		log.Printf("fetchObservedDatabases page: name=%q id=%q observable=%t\n", database.Name, database.Id, database.Observable)
 		if database.IsObservable() && database.Id != "" {
 			ids = append(ids, database.Id)
 		}
