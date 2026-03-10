@@ -2,6 +2,7 @@ package box
 
 import (
 	"spacedrepetitiongo/utils"
+	"strings"
 
 	notionApi "github.com/jomei/notionapi"
 )
@@ -35,28 +36,43 @@ func (database ObservedDatabase) IsObservable() bool {
 }
 
 func parseObservedDatabaseName(page notionApi.Page) string {
-	nameProperty := page.Properties["Name"]
-	titleProperty, ok := nameProperty.(*notionApi.TitleProperty)
-	if !ok {
-		return ""
+	for propertyName, propertyValue := range page.Properties {
+		if !strings.EqualFold(propertyName, "name") {
+			continue
+		}
+		titleProperty, ok := propertyValue.(*notionApi.TitleProperty)
+		if !ok {
+			return ""
+		}
+		return utils.RichTextToString(titleProperty.Title)
 	}
-	return utils.RichTextToString(titleProperty.Title)
+	return ""
 }
 
 func parseObservedDatabaseId(page notionApi.Page) string {
-	idProperty := page.Properties["Id"]
-	richTextProperty, ok := idProperty.(*notionApi.RichTextProperty)
-	if !ok {
-		return ""
+	for propertyName, propertyValue := range page.Properties {
+		if !strings.EqualFold(propertyName, "id") {
+			continue
+		}
+		richTextProperty, ok := propertyValue.(*notionApi.RichTextProperty)
+		if !ok {
+			return ""
+		}
+		return utils.RichTextToString(richTextProperty.RichText)
 	}
-	return utils.RichTextToString(richTextProperty.RichText)
+	return ""
 }
 
 func parseObservedDatabaseObservable(page notionApi.Page) bool {
-	observableProperty := page.Properties["Observable"]
-	checkboxProperty, ok := observableProperty.(*notionApi.CheckboxProperty)
-	if !ok {
-		return false
+	for propertyName, propertyValue := range page.Properties {
+		if !strings.EqualFold(propertyName, "observable") {
+			continue
+		}
+		checkboxProperty, ok := propertyValue.(*notionApi.CheckboxProperty)
+		if !ok {
+			return false
+		}
+		return checkboxProperty.Checkbox
 	}
-	return checkboxProperty.Checkbox
+	return false
 }
