@@ -12,6 +12,10 @@ func NewDatabaseQueryRequest(
 	}
 }
 
+func NewEmptyDatabaseQueryRequest() notionApi.DatabaseQueryRequest {
+	return notionApi.DatabaseQueryRequest{}
+}
+
 func NewUpdateRequest(properties notionApi.Properties) notionApi.PageUpdateRequest {
 	return notionApi.PageUpdateRequest{
 		Properties: properties,

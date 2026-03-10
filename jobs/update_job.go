@@ -15,8 +15,9 @@ import (
 func Update() {
 	db := utils.OpenDb()
 	notionClient := notion.NewClient()
-	observedDatabasesIds := config.GetObservedDatabasesIds()
-	boxes := fetchFromNotion(observedDatabasesIds, notionClient)
+	observedDatabasesId := config.GetObservedDatabasesId()
+	observedDatabases := fetchObservedDatabases(observedDatabasesId, notionClient)
+	boxes := fetchFromNotion(observedDatabases, notionClient)
 	reviseFlashcardsRequest := notion.NewDatabaseQueryRequest(
 		notion.And(
 			KnowLevel(1, true),
@@ -42,6 +43,23 @@ func Update() {
 	syncFlashCards(db, flashCardsToMemorize, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
 
 	defer db.Close()
+}
+
+func fetchObservedDatabases(
+	observedDatabasesId string,
+	client notion.Client,
+) []string {
+	request := notion.NewEmptyDatabaseQueryRequest()
+	pages := client.FetchPagesFromDb(observedDatabasesId, &request)
+	databases := box.NewObservedDatabases(pages)
+	ids := []string{}
+	for _, database := range databases {
+		if database.IsObservable() && database.Id != "" {
+			ids = append(ids, database.Id)
+		}
+	}
+
+	return ids
 }
 
 func fetchFlashCards(boxes []box.Box, client notion.Client, request *notionApi.DatabaseQueryRequest) []flashcard.Flashcard {

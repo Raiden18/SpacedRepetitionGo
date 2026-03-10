@@ -14,11 +14,11 @@ type Config struct {
 }
 
 type Notion struct {
-	ApiKey                   string   `json:"api_key"`
-	ObservedDatabases        []string `json:"observed_databases"`
-	EnglishVocabularyId      string   `json:"english_vocabulary_id"`
-	GreekVocabularyId        string   `json:"greek_vocabulary_id"`
-	GreekPassiveVocabularyId string   `json:"greek_passive_vocabulary_id"`
+	ApiKey                   string `json:"api_key"`
+	ObservedDatabases        string `json:"observed_databases"`
+	EnglishVocabularyId      string `json:"english_vocabulary_id"`
+	GreekVocabularyId        string `json:"greek_vocabulary_id"`
+	GreekPassiveVocabularyId string `json:"greek_passive_vocabulary_id"`
 }
 
 type Telegram struct {
@@ -86,6 +86,6 @@ func NewNotionDataBaseWithDictionary(id string, dictionaries []string) NotionDat
 	}
 }
 
-func GetObservedDatabasesIds() []string {
+func GetObservedDatabasesId() string {
 	return NewConfigFromFile().Notion.ObservedDatabases
 }
