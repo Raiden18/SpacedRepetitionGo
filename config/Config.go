@@ -1,29 +1,29 @@
 package config
 
 import (
-	"encoding/json"
-	"io"
 	"log"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
+	"sync"
+
+	"gopkg.in/yaml.v3"
 )
 
-type Config struct {
-	Notion   Notion   `json:"notion"`
-	Telegram Telegram `json:"telegram"`
-}
+type Conf struct {
+	Notion struct {
+		ApiKey                   string `yaml:"api_key"`
+		ObservedDatabases        string `yaml:"observed_databases"`
+		EnglishVocabularyId      string `yaml:"english_vocabulary_id"`
+		GreekVocabularyId        string `yaml:"greek_vocabulary_id"`
+		GreekPassiveVocabularyId string `yaml:"greek_passive_vocabulary_id"`
+	} `yaml:"notion"`
 
-type Notion struct {
-	ApiKey                   string `json:"api_key"`
-	ObservedDatabases        string `json:"observed_databases"`
-	EnglishVocabularyId      string `json:"english_vocabulary_id"`
-	GreekVocabularyId        string `json:"greek_vocabulary_id"`
-	GreekPassiveVocabularyId string `json:"greek_passive_vocabulary_id"`
-}
-
-type Telegram struct {
-	ApiKey string `json:"api_key"`
-	ChatId string `json:"chat_id"`
+	Telegram struct {
+		ApiKey string `yaml:"api_key"`
+		ChatId string `yaml:"chat_id"`
+	} `yaml:"telegram"`
 }
 
 type NotionDataBase struct {
@@ -52,27 +52,41 @@ func TelegramApiKey() string {
 
 func TelegramChatId() int64 {
 	file := NewConfigFromFile()
-	id, error := strconv.ParseInt(file.Telegram.ChatId, 10, 64)
-	if error != nil {
-		log.Fatalln(error)
+	id, err := strconv.ParseInt(file.Telegram.ChatId, 10, 64)
+	if err != nil {
+		log.Fatalln(err)
 	}
 	return id
 }
 
-func NewConfigFromFile() Config {
-	homeDir, _ := os.UserHomeDir()
-	configPath := homeDir + "/repetition/spaced_repetition.config"
-	configFile, _ := os.Open(configPath)
-	bytes, _ := io.ReadAll(configFile)
+var (
+	configOnce sync.Once
+	configData Conf
+)
 
-	var config Config
+func NewConfigFromFile() Conf {
+	configOnce.Do(func() {
+		configPath := secretsPath()
+		bytes, err := os.ReadFile(configPath)
+		if err != nil {
+			log.Fatalf("read config file %s: %v", configPath, err)
+		}
 
-	err := json.Unmarshal(bytes, &config)
-	if err != nil {
-		panic(err)
+		if err := yaml.Unmarshal(bytes, &configData); err != nil {
+			log.Fatalf("parse config file %s: %v", configPath, err)
+		}
+	})
+
+	return configData
+}
+
+func secretsPath() string {
+	_, currentFile, _, ok := runtime.Caller(0)
+	if !ok {
+		log.Fatal("resolve config path: runtime caller unavailable")
 	}
-	configFile.Close()
-	return config
+
+	return filepath.Join(filepath.Dir(currentFile), "..", "secrets.yaml")
 }
 
 func NewNotionDataBase(id string) NotionDataBase {

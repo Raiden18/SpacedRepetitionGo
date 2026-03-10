@@ -16,6 +16,7 @@ require (
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	golang.org/x/image v0.31.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require (
