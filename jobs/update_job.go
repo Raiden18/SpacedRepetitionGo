@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"log"
 	"spacedrepetitiongo/box"
 	"spacedrepetitiongo/config"
 	"spacedrepetitiongo/flashcard"
@@ -16,6 +17,7 @@ func Update() {
 	db := utils.OpenDb()
 	notionClient := notion.NewClient()
 	observedDatabasesId := config.GetObservedDatabasesId()
+	log.Println("observedDatabasesId:", observedDatabasesId)
 	observedDatabases := fetchObservedDatabases(observedDatabasesId, notionClient)
 	boxes := fetchFromNotion(observedDatabases, notionClient)
 	reviseFlashcardsRequest := notion.NewDatabaseQueryRequest(
@@ -51,6 +53,7 @@ func fetchObservedDatabases(
 ) []string {
 	request := notion.NewEmptyDatabaseQueryRequest()
 	pages := client.FetchPagesFromDb(observedDatabasesId, &request)
+	log.Println("fetchObservedDatabases pages count:", len(pages))
 	databases := box.NewObservedDatabases(pages)
 	ids := []string{}
 	for _, database := range databases {
