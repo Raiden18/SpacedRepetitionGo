@@ -52,6 +52,9 @@ func fetchObservedDatabases(
 ) []string {
 	request := notion.NewEmptyDatabaseQueryRequest()
 	pages := client.FetchPagesFromDb(observedDatabasesId, &request)
+	for _, page := range pages {
+		log.Printf("fetchObservedDatabases raw page: %+v\n", page)
+	}
 	databases := box.NewObservedDatabases(pages)
 	ids := []string{}
 	for _, database := range databases {
