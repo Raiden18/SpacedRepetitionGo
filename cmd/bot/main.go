@@ -5,9 +5,7 @@ import (
 	"net/http"
 	"spacedrepetitiongo/bot"
 
-	//"spacedrepetitiongo/flashcard"
 	"spacedrepetitiongo/notion"
-	//"spacedrepetitiongo/openai"
 	"spacedrepetitiongo/telegram"
 	"spacedrepetitiongo/utils"
 
@@ -18,7 +16,6 @@ func main() {
 	tg := telegram.NewBot()
 	notionClient := notion.NewClient()
 	db := utils.OpenDb()
-	//openAi := openai.NewClient()
 
 	updates := tg.ListenForWebhook()
 	go func() {
@@ -37,15 +34,6 @@ func main() {
 				command := update.Message.Command()
 				commands := bot.CreateCommands()
 				commands[command](message, tg, db, notionClient)
-			}
-
-			if bot.IsAddGreekVocabularyState(db) {
-				//gptFlashCard := flashcard.GenerateFromGPT(
-				//	"Greek",
-				//	message.Text,
-				//	openAi,
-				//)
-				//gptFlashCard.SendToTelegram(tg)
 			}
 		}
 	}

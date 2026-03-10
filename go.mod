@@ -14,7 +14,6 @@ require (
 
 require (
 	github.com/disintegration/imaging v1.6.2 // indirect
-	github.com/sashabaranov/go-openai v1.41.1 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	golang.org/x/image v0.31.0 // indirect
 )
