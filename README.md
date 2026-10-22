@@ -43,10 +43,9 @@ The bot works in one chat (`telegram.chat_id`) and ignores everyone else.
    | Row | Buttons |
    |---|---|
    | 1 | ⬅️ Previous · Next ➡️ |
-   | 2 | To the beginning ⏮️ · To the end ⏭️ |
-   | 3 | Card to revise: Forgot ❌ · Recalled ✅. Card to memorize: Memorized ✅ |
-   | 4 | Dictionary link: Cambridge Dictionary for English, Forvo for Greek |
-   | 5 | Finish 🏁 (closes the card) |
+   | 2 | Card to revise: Forgot ❌ · Recalled ✅. Card to memorize: Memorized ✅ |
+   | 3 | Dictionary link: Cambridge Dictionary for English, Forvo for Greek |
+   | 4 | Finish 🏁 (closes the card) |
 
 3. **`/update`** runs `update-cache-notifier.sh` on the server, which refreshes
    the cards and notifications right away.

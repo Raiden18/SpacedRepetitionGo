@@ -192,12 +192,6 @@ func FirstInBox(db sqlx.DB, boxId string, queue string) *Flashcard {
 		WHERE notion_data_base_id = ? AND queue = ? ORDER BY position LIMIT 1`, boxId, queue)
 }
 
-// LastInBox returns the last card of a box's queue, or nil if it is empty.
-func LastInBox(db sqlx.DB, boxId string, queue string) *Flashcard {
-	return getCard(db, `SELECT * FROM `+CARDS_TABLE+`
-		WHERE notion_data_base_id = ? AND queue = ? ORDER BY position DESC LIMIT 1`, boxId, queue)
-}
-
 func selectCards(db sqlx.DB, query string, args ...any) []Flashcard {
 	entities := []FlashcardEntity{}
 	if err := db.Select(&entities, query, args...); err != nil {

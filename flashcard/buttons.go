@@ -52,26 +52,6 @@ func previousButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 	)
 }
 
-func toEndButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
-	return telegram.NewCallbackButton(
-		"To the end ⏭️",
-		Parameter(
-			EndKey(),
-			flashcard.Id,
-		),
-	)
-}
-
-func toBeginningButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
-	return telegram.NewCallbackButton(
-		"To the beginning ⏮️",
-		Parameter(
-			BeginingKey(),
-			flashcard.Id,
-		),
-	)
-}
-
 func finishButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 	return telegram.NewCallbackButton(
 		"Finish 🏁",
@@ -96,12 +76,4 @@ func PreviousFlashCardKey() string {
 
 func FinishKey() string {
 	return "finish"
-}
-
-func EndKey() string {
-	return "toEnd"
-}
-
-func BeginingKey() string {
-	return "toBegining"
 }

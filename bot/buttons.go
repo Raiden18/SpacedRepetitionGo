@@ -36,43 +36,11 @@ func createButtons() map[string]ButtonCallbackFunc {
 		flashcard.PreviousFlashCardKey():  onShowCardButtonClicked,
 		flashcard.FinishKey():             onFinishButtonClicked,
 		flashcard.MemorizedFlashCardKey(): onMemorizedButtonOfFlashcardClicked,
-		flashcard.EndKey():                onToEndClicked,
-		flashcard.BeginingKey():           onToBeginingClicked,
 	}
 }
 
 func messageId(update tgbotapi.Update) int {
 	return update.CallbackQuery.Message.MessageID
-}
-
-func onToEndClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	jumpWithinQueue(update, bot, db, flashcard.LastInBox)
-}
-
-func onToBeginingClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	jumpWithinQueue(update, bot, db, flashcard.FirstInBox)
-}
-
-// jumpWithinQueue shows the first or last card of the current card's queue.
-// Buttons carry the current card's id; buttons on messages sent before the
-// cards table existed carry a box id instead, so fall back to that.
-func jumpWithinQueue(
-	update tgbotapi.Update,
-	bot telegram.Bot,
-	db sqlx.DB,
-	pick func(db sqlx.DB, boxId string, queue string) *flashcard.Flashcard,
-) {
-	value := fetchValue(update.CallbackData())
-
-	var target *flashcard.Flashcard
-	if current := flashcard.LoadById(db, value); current != nil {
-		target = pick(db, current.BoxId, current.Queue)
-	} else if target = pick(db, value, flashcard.QueueMemorize); target == nil {
-		target = pick(db, value, flashcard.QueueRevise)
-	}
-
-	target.SendToTelegram(bot)
-	bot.DeleteMessage(messageId(update))
 }
 
 func onBoxButtonToReviseClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
