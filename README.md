@@ -67,16 +67,20 @@ the same time; updates sent in between are rejected and redelivered by Telegram.
 
 ## Deploy and rollback
 
-Pushes to `main` build every binary and copy them, with the decrypted
-`secrets.yaml`, to `~/repetition/releases/<release>/` on the VPS. Then
-`~/repetition/go` is switched to point at that release and `ktor.service`
-restarts. The 5 most recent releases are kept.
+Pushes to `main` build every binary and upload them, with the decrypted
+`secrets.yaml`, to `~/repetition/releases/<release>/` on the VPS. The files are
+then copied into `~/repetition/go` (each one renamed into place in one step,
+so a running job never finds a binary missing) and `ktor.service` restarts.
+The 5 most recent releases are kept.
 
-To roll back:
+To roll back, copy an earlier release into `~/repetition/go`:
 
 ```sh
 cd ~/repetition
 ls -1t releases/
-ln -sfn releases/<previous release> go.new && mv -Tf go.new go
+RELEASE=<previous release>
+for file in updater notifier initializer bot image-replacer secrets.yaml; do
+  cp -p "releases/$RELEASE/$file" "go/.$file.new" && mv -f "go/.$file.new" "go/$file"
+done
 sudo systemctl restart ktor.service
 ```

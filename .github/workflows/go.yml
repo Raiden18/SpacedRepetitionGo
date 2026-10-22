@@ -130,11 +130,10 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H $VPS_HOST >> ~/.ssh/known_hosts
         
-        # Each deploy goes into its own release folder; ~/repetition/go is a
-        # symlink switched to it in one step, so jobs never see a half-copied
-        # folder. To roll back on the server:
-        #   cd ~/repetition && ln -sfn releases/<previous> go.new && mv -Tf go.new go \
-        #     && sudo systemctl restart ktor.service
+        # Each deploy is uploaded to its own release folder (kept for rollback),
+        # then its files are copied into ~/repetition/go. Every file is renamed
+        # into place in one step, so a job never finds a binary missing.
+        # To roll back on the server, see "Deploy and rollback" in the README.
         RELEASE="${GITHUB_SHA::12}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
 
         ssh -i ~/.ssh/id_rsa $VPS_USER@$VPS_HOST "mkdir -p repetition/releases/$RELEASE"
@@ -154,13 +153,11 @@ jobs:
         cd ~/repetition
         chmod +x releases/$RELEASE/updater releases/$RELEASE/notifier releases/$RELEASE/initializer releases/$RELEASE/bot releases/$RELEASE/image-replacer
 
-        # One-time migration: the old deploys used a plain folder.
-        if [ -d go ] && [ ! -L go ]; then
-          mv go "releases/pre-symlink-$(date +%Y%m%d%H%M%S)"
-        fi
-
-        ln -sfn "releases/$RELEASE" go.new
-        mv -Tf go.new go
+        mkdir -p go
+        for file in updater notifier initializer bot image-replacer secrets.yaml; do
+          cp -p "releases/$RELEASE/$file" "go/.$file.new"
+          mv -f "go/.$file.new" "go/$file"
+        done
         sudo systemctl restart ktor.service
 
         # Keep the 5 most recent releases for rollback.
