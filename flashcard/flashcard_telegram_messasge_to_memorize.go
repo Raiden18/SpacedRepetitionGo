@@ -17,21 +17,17 @@ func NewFlashcardTelegramMessageToMemorize(flashcard Flashcard) FlashcardTelegra
 }
 
 func (message FlashcardTelegramMessageToMemorize) GetButtons() *tgbotapi.InlineKeyboardMarkup {
-	// Same layout as cards to revise: navigation, jumps, the answer button,
-	// then Finish alone at the bottom.
+	// Same layout as cards to revise: navigation, the answer button, then
+	// Finish alone at the bottom.
 	toPreviosAndNext := []tgbotapi.InlineKeyboardButton{}
-	toStartAndEnd := []tgbotapi.InlineKeyboardButton{}
 	if message.Flashcard.Previous != nil {
 		toPreviosAndNext = append(toPreviosAndNext, previousButton(message.Flashcard))
-		toStartAndEnd = append(toStartAndEnd, toBeginningButton(message.Flashcard))
 	}
 	if message.Flashcard.Next != nil {
 		toPreviosAndNext = append(toPreviosAndNext, nextButton(message.Flashcard))
-		toStartAndEnd = append(toStartAndEnd, toEndButton(message.Flashcard))
 	}
 	rows := [][]tgbotapi.InlineKeyboardButton{
 		toPreviosAndNext,
-		toStartAndEnd,
 		tgbotapi.NewInlineKeyboardRow(
 			newMemorizedButton(message.Flashcard),
 		),
