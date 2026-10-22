@@ -24,7 +24,7 @@ func NewEmptyMemorizingNotification() MemorizingNotification {
 func NewMemorizingNotificationFromDB(db sqlx.DB) MemorizingNotification {
 	return NewMemorizingNotification(
 		box.NewBoxesFromDb(db),
-		flashcard.NewFlashcardsFromDb(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE),
+		flashcard.LoadQueue(db, flashcard.QueueMemorize),
 	)
 }
 

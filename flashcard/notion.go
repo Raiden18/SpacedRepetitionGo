@@ -1,12 +1,14 @@
 package flashcard
 
 import (
+	"log"
 	"spacedrepetitiongo/config"
-	"spacedrepetitiongo/notion"
+	"spacedrepetitiongo/outbox"
 	"spacedrepetitiongo/utils"
 	"strconv"
 	"strings"
 
+	"github.com/jmoiron/sqlx"
 	notionApi "github.com/jomei/notionapi"
 )
 
@@ -21,9 +23,11 @@ func NewFlashCards(pages []notionApi.Page) []Flashcard {
 }
 
 func NewFlashCard(page notionApi.Page) Flashcard {
+	image := parseImage(page)
 	return Flashcard{
 		Id:          page.ID.String(),
-		Image:       parseImage(page),
+		Image:       image,
+		ImageSource: image,
 		BoxId:       parseDbId(page.Parent.DatabaseID.String()),
 		Name:        parseName(page),
 		Example:     parseExample(page),
@@ -32,21 +36,31 @@ func NewFlashCard(page notionApi.Page) Flashcard {
 	}
 }
 
-func (flashcard Flashcard) UpdatePageOnNotion(client notion.Client) {
-	properties := notionApi.Properties{}
+// NotionUpdate is the set of Notion properties that records this card's
+// current know levels.
+func (flashcard Flashcard) NotionUpdate() outbox.Update {
+	update := outbox.Update{Checkboxes: map[string]bool{}}
 
 	for level, value := range flashcard.KnowLevels {
 		if value != nil {
-			properties[KnowLevelProprtyName(level)] = notionApi.CheckboxProperty{Checkbox: *value}
+			update.Checkboxes[KnowLevelProprtyName(level)] = *value
 		}
 	}
 
 	if flashcard.BoxId == config.EnglishVocabularyId() {
-		properties["Interval 14"] = notionApi.NumberProperty{Number: 560}
+		update.Numbers = map[string]float64{"Interval 14": 560}
 	}
 
-	updateRequest := notion.NewUpdateRequest(properties)
-	client.UpdatePage(flashcard.Id, &updateRequest)
+	return update
+}
+
+// EnqueueNotionUpdate durably queues this card's know levels for Notion.
+// Call it before changing the local cache so the answer can't be lost.
+func (flashcard Flashcard) EnqueueNotionUpdate(db sqlx.DB) Flashcard {
+	if err := outbox.Enqueue(db, flashcard.Id, flashcard.NotionUpdate()); err != nil {
+		log.Panic(err)
+	}
+	return flashcard
 }
 
 func KnowLevelProprtyName(level int) string {

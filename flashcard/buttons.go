@@ -57,7 +57,7 @@ func toEndButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 		"To the end ⏭️",
 		Parameter(
 			EndKey(),
-			flashcard.BoxId,
+			flashcard.Id,
 		),
 	)
 }
@@ -67,7 +67,7 @@ func toBeginningButton(flashcard Flashcard) tgbotapi.InlineKeyboardButton {
 		"To the beginning ⏮️",
 		Parameter(
 			BeginingKey(),
-			flashcard.BoxId,
+			flashcard.Id,
 		),
 	)
 }

@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"log"
 	"spacedrepetitiongo/flashcard"
 	"spacedrepetitiongo/notification"
 	"spacedrepetitiongo/notion"
@@ -14,11 +15,15 @@ import (
 type ButtonCallbackFunc func(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client)
 
 func RespondToPressedButtons(update tgbotapi.Update, tg telegram.Bot, db sqlx.DB, client notion.Client) {
+	defer tg.ResponseToPressedButton(update.CallbackQuery)
+
 	key := strings.Split(update.CallbackQuery.Data, "=")[0]
-	buttons := createButtons()
-	pressedButtonCallback := buttons[key]
+	pressedButtonCallback, ok := createButtons()[key]
+	if !ok {
+		log.Printf("Ignoring unknown button: %q", update.CallbackQuery.Data)
+		return
+	}
 	pressedButtonCallback(update, tg, db, client)
-	tg.ResponseToPressedButton(update.CallbackQuery)
 }
 
 func createButtons() map[string]ButtonCallbackFunc {
@@ -27,8 +32,8 @@ func createButtons() map[string]ButtonCallbackFunc {
 		notification.BoxIdToMemorize():    onBoxButtonToMemorizeClicked,
 		flashcard.ForgottenFlashCardKey(): onForgetButtonOfFlashcardClicked,
 		flashcard.RecalledFlashcardKey():  onRecallButtonOfFlashCardClicked,
-		flashcard.NextFlashCardKey():      onNextFlashcardButtonClicked,
-		flashcard.PreviousFlashCardKey():  onPreviousFlashcardButtonClicked,
+		flashcard.NextFlashCardKey():      onShowCardButtonClicked,
+		flashcard.PreviousFlashCardKey():  onShowCardButtonClicked,
 		flashcard.FinishKey():             onFinishedMemorizingButtonClicked,
 		flashcard.MemorizedFlashCardKey(): onMemorizedButtonOfFlashcardClicked,
 		flashcard.EndKey():                onToEndClicked,
@@ -36,191 +41,125 @@ func createButtons() map[string]ButtonCallbackFunc {
 	}
 }
 
+func messageId(update tgbotapi.Update) int {
+	return update.CallbackQuery.Message.MessageID
+}
+
 func onToEndClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	boxId := fetchValue(update.CallbackData())
-
-	lastToMemorize := flashcard.GetLast(db, boxId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	lastToRevise := flashcard.GetLast(db, boxId, flashcard.FLASH_CARDS_TO_REVISE_TABLE)
-
-	if lastToMemorize != nil {
-		lastToMemorize.
-			ToTelegramMessageToMemorize().
-			SendToTelegram(bot)
-	} else if lastToRevise != nil {
-		lastToRevise.
-			ToTelegramMessageToRevise().
-			SendToTelegram(bot)
-	}
-	bot.DeleteMessage(update.CallbackQuery.Message.MessageID)
+	jumpWithinQueue(update, bot, db, flashcard.LastInBox)
 }
 
 func onToBeginingClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	boxId := fetchValue(update.CallbackData())
+	jumpWithinQueue(update, bot, db, flashcard.FirstInBox)
+}
 
-	firstToMemorize := flashcard.GetFirst(db, boxId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	firstToRevise := flashcard.GetFirst(db, boxId, flashcard.FLASH_CARDS_TO_REVISE_TABLE)
+// jumpWithinQueue shows the first or last card of the current card's queue.
+// Buttons carry the current card's id; buttons on messages sent before the
+// cards table existed carry a box id instead, so fall back to that.
+func jumpWithinQueue(
+	update tgbotapi.Update,
+	bot telegram.Bot,
+	db sqlx.DB,
+	pick func(db sqlx.DB, boxId string, queue string) *flashcard.Flashcard,
+) {
+	value := fetchValue(update.CallbackData())
 
-	if firstToMemorize != nil {
-		firstToMemorize.
-			ToTelegramMessageToMemorize().
-			SendToTelegram(bot)
-	} else if firstToRevise != nil {
-		firstToRevise.
-			ToTelegramMessageToRevise().
-			SendToTelegram(bot)
+	var target *flashcard.Flashcard
+	if current := flashcard.LoadById(db, value); current != nil {
+		target = pick(db, current.BoxId, current.Queue)
+	} else if target = pick(db, value, flashcard.QueueMemorize); target == nil {
+		target = pick(db, value, flashcard.QueueRevise)
 	}
 
-	bot.DeleteMessage(update.CallbackQuery.Message.MessageID)
+	target.SendToTelegram(bot)
+	bot.DeleteMessage(messageId(update))
 }
 
 func onBoxButtonToReviseClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	sendNextFlashcardToRevise(db, bot, fetchValue(update.CallbackData()))
-}
-
-func onForgetButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	flashcardToForget := flashcard.NewRevisingFlashcardcFromDbById(db, fetchValue(update.CallbackData()))
-	forgottenFlashcard := flashcardToForget.Forget()
-
-	if flashcard.CountInDb(db, forgottenFlashcard.BoxId, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE) > 0 {
-		last := flashcard.GetLast(db, forgottenFlashcard.BoxId, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
-		if last != nil {
-			last.Next = &forgottenFlashcard.Id
-			last.UpdateLinkedFlashCards(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
-			forgottenFlashcard.Previous = &last.Id
-		} else {
-			// Defensive: inconsistent links despite non-zero count.
-			forgottenFlashcard.Previous = nil
-		}
-	} else {
-		forgottenFlashcard.Previous = nil
-	}
-	forgottenFlashcard.Next = nil
-
-	forgottenFlashcard.
-		InsertInto(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE).
-		RemoveFrom(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE).
-		RemoveFromChat(bot, update.CallbackQuery.Message.MessageID).
-		UpdateOnNotion(client)
-
-	notification.
-		NewRevisingNotificationFromDB(db).
-		EditExistedMessage(db, bot)
-
-	notification.
-		NewMemorizingNotificationFromDB(db).
-		EditExistedMessage(db, bot)
-
-	sendNextFlashcardToRevise(db, bot, forgottenFlashcard.BoxId)
-}
-
-func onRecallButtonOfFlashCardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	recalledFlashcard := flashcard.
-		NewRevisingFlashcardcFromDbById(db, fetchValue(update.CallbackData())).
-		Recall().
-		RemoveFrom(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE).
-		RemoveFromChat(bot, update.CallbackQuery.Message.MessageID).
-		UpdateOnNotion(client)
-
-	notification.
-		NewRevisingNotificationFromDB(db).
-		EditExistedMessage(db, bot)
-
-	sendNextFlashcardToRevise(db, bot, recalledFlashcard.BoxId)
-}
-
-func sendNextFlashcardToRevise(db sqlx.DB, bot telegram.Bot, boxId string) {
-	flashcard.
-		NewRevisingFlashcardFromDbByBoxId(db, boxId).
-		ToTelegramMessageToRevise().
-		SendToTelegram(bot)
+	flashcard.FirstInBox(db, fetchValue(update.CallbackData()), flashcard.QueueRevise).SendToTelegram(bot)
 }
 
 func onBoxButtonToMemorizeClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	boxId := fetchValue(update.CallbackData())
-	flashCards := flashcard.GetAllFromBdByBoxId(db, boxId, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
-	flashcard.ClearTable(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	flashcard.InsertIntoDB(db, flashCards, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	firstFlashCard := flashcard.GetFirst(db, boxId, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	firstFlashCard.
-		ToTelegramMessageToMemorize().
-		SendToTelegram(bot)
+	flashcard.FirstInBox(db, fetchValue(update.CallbackData()), flashcard.QueueMemorize).SendToTelegram(bot)
 }
 
-func onMemorizedButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, notionClient notion.Client) {
-	memorizedFlashCard := flashcard.
-		NewMemorizingFlashcardFromDb(db, fetchValue(update.CallbackData())).
+// loadForAnswer returns the card a button refers to, if it is still in the
+// expected queue. Otherwise (already answered, e.g. a double tap) it deletes
+// the stale message and returns nil.
+func loadForAnswer(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, queue string) *flashcard.Flashcard {
+	card := flashcard.LoadById(db, fetchValue(update.CallbackData()))
+	if card == nil || card.Queue != queue {
+		bot.DeleteMessage(messageId(update))
+		return nil
+	}
+	return card
+}
+
+func onForgetButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+	card := loadForAnswer(update, bot, db, flashcard.QueueRevise)
+	if card == nil {
+		return
+	}
+
+	// Queue the answer for Notion before touching the local cache, so it can't be lost.
+	forgotten := card.
+		Forget().
+		EnqueueNotionUpdate(db).
+		MoveToEndOf(db, flashcard.QueueMemorize).
+		RemoveFromChat(bot, messageId(update))
+
+	notification.NewRevisingNotificationFromDB(db).EditExistedMessage(db, bot)
+	notification.NewMemorizingNotificationFromDB(db).EditExistedMessage(db, bot)
+
+	flashcard.FirstInBox(db, forgotten.BoxId, flashcard.QueueRevise).SendToTelegram(bot)
+}
+
+func onRecallButtonOfFlashCardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+	card := loadForAnswer(update, bot, db, flashcard.QueueRevise)
+	if card == nil {
+		return
+	}
+
+	recalled := card.
+		Recall().
+		EnqueueNotionUpdate(db).
+		Delete(db).
+		RemoveFromChat(bot, messageId(update))
+
+	notification.NewRevisingNotificationFromDB(db).EditExistedMessage(db, bot)
+
+	flashcard.FirstInBox(db, recalled.BoxId, flashcard.QueueRevise).SendToTelegram(bot)
+}
+
+func onMemorizedButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+	card := loadForAnswer(update, bot, db, flashcard.QueueMemorize)
+	if card == nil {
+		return
+	}
+
+	memorized := card.
 		Memorize().
-		RemoveFrom(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE).
-		RemoveFrom(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE).
-		UpdateOnNotion(notionClient).
-		RemoveFromChat(bot, update.CallbackQuery.Message.MessageID)
+		EnqueueNotionUpdate(db).
+		Delete(db).
+		RemoveFromChat(bot, messageId(update))
 
-	if memorizedFlashCard.Previous != nil {
-		previous := flashcard.NewMemorizingFlashcardFromDb(db, *memorizedFlashCard.Previous)
-		previous.Next = memorizedFlashCard.Next
-		previous.UpdateLinkedFlashCards(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-		previous.UpdateLinkedFlashCards(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
-	}
+	notification.NewMemorizingNotificationFromDB(db).EditExistedMessage(db, bot)
 
-	if memorizedFlashCard.Next != nil {
-		next := flashcard.NewMemorizingFlashcardFromDb(db, *memorizedFlashCard.Next)
-		next.Previous = memorizedFlashCard.Previous
-		next.UpdateLinkedFlashCards(db, flashcard.FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-		next.UpdateLinkedFlashCards(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE)
-	}
-
-	notification.
-		NewMemorizingNotificationFromDB(db).
-		EditExistedMessage(db, bot)
-
-	if memorizedFlashCard.Next != nil {
-		flashcard.
-			NewMemorizingFlashcardFromDb(db, *memorizedFlashCard.Next).
-			ToTelegramMessageToMemorize().
-			SendToTelegram(bot)
-	} else if memorizedFlashCard.Previous != nil {
-		flashcard.
-			NewMemorizingFlashcardFromDb(db, *memorizedFlashCard.Previous).
-			ToTelegramMessageToMemorize().
-			SendToTelegram(bot)
+	// Carry on with the neighbouring card, preferring the next one.
+	if memorized.Next != nil {
+		flashcard.LoadById(db, *memorized.Next).SendToTelegram(bot)
+	} else if memorized.Previous != nil {
+		flashcard.LoadById(db, *memorized.Previous).SendToTelegram(bot)
 	}
 }
 
-func onFinishedMemorizingButtonClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, notionClient notion.Client) {
-	bot.DeleteMessage(update.CallbackQuery.Message.MessageID)
+func onFinishedMemorizingButtonClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+	bot.DeleteMessage(messageId(update))
 }
 
-func onPreviousFlashcardButtonClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	previousFlashcardId := fetchValue(update.CallbackData())
-	previousFlashCard := flashcard.NewMemorizingFlashcardFromDb(db, previousFlashcardId)
-
-	if previousFlashCard == nil {
-		previousFlashCard = flashcard.NewRevisingFlashcardcFromDbById(db, previousFlashcardId)
-		previousFlashCard.
-			ToTelegramMessageToRevise().
-			SendToTelegram(bot)
-	} else {
-		previousFlashCard.
-			ToTelegramMessageToMemorize().
-			SendToTelegram(bot)
-	}
-	bot.DeleteMessage(update.CallbackQuery.Message.MessageID)
-}
-
-func onNextFlashcardButtonClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
-	nextFlashcardId := fetchValue(update.CallbackData())
-	nextFlashCard := flashcard.NewMemorizingFlashcardFromDb(db, nextFlashcardId)
-
-	if nextFlashCard == nil {
-		nextFlashCard = flashcard.NewRevisingFlashcardcFromDbById(db, nextFlashcardId)
-		nextFlashCard.
-			ToTelegramMessageToRevise().
-			SendToTelegram(bot)
-	} else {
-		nextFlashCard.
-			ToTelegramMessageToMemorize().
-			SendToTelegram(bot)
-	}
-
-	bot.DeleteMessage(update.CallbackQuery.Message.MessageID)
+// onShowCardButtonClicked handles Next and Previous: both carry the id of the
+// card to show.
+func onShowCardButtonClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+	flashcard.LoadById(db, fetchValue(update.CallbackData())).SendToTelegram(bot)
+	bot.DeleteMessage(messageId(update))
 }

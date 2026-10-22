@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"spacedrepetitiongo/config"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -55,9 +56,18 @@ func PhotomessageConfig(
 				ChatID:      config.TelegramChatId(),
 				ReplyMarkup: buttons,
 			},
-			File: tgbotapi.FilePath(image),
+			File: photoFile(image),
 		},
 		Caption:   text,
 		ParseMode: tgbotapi.ModeMarkdownV2,
 	}
+}
+
+// photoFile sends remote images by URL (cards whose image the image job hasn't
+// downloaded yet) and everything else as a local file.
+func photoFile(image string) tgbotapi.RequestFileData {
+	if strings.HasPrefix(image, "https://") || strings.HasPrefix(image, "http://") {
+		return tgbotapi.FileURL(image)
+	}
+	return tgbotapi.FilePath(image)
 }

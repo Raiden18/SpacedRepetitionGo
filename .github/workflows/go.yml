@@ -13,25 +13,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install git-crypt
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git-crypt
-
-    - name: Unlock encrypted files
-      env:
-        GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
-      run: |
-        test -n "$GIT_CRYPT_KEY"
-        key_file="$(mktemp)"
-        printf '%s' "$GIT_CRYPT_KEY" | base64 --decode > "$key_file"
-        git-crypt unlock "$key_file"
-        rm -f "$key_file"
-    
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.21'
+        go-version-file: go.mod
     
     - name: Build Initializer
       run: go build -o ./initializer ./cmd/initializer
@@ -78,19 +63,37 @@ jobs:
         name: image_replacer
         path: ./image-replacer
 
-    - name: Upload secrets
-      uses: actions/upload-artifact@v4
-      with:
-        name: secrets_yaml
-        path: ./secrets.yaml
-
 
   deploy:
     runs-on: ubuntu-latest
 
     needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
+    # Decrypt secrets only here, right before copying them to the VPS,
+    # so they never end up in a downloadable workflow artifact.
+    # Checked out into ./src so the repo's bot/ folder doesn't clash with the bot binary.
+    - uses: actions/checkout@v4
+      with:
+        path: src
+
+    - name: Install git-crypt
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git-crypt
+
+    - name: Unlock encrypted files
+      env:
+        GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
+      working-directory: src
+      run: |
+        test -n "$GIT_CRYPT_KEY"
+        key_file="$(mktemp)"
+        printf '%s' "$GIT_CRYPT_KEY" | base64 --decode > "$key_file"
+        git-crypt unlock "$key_file"
+        rm -f "$key_file"
+
     - name: Download Initializer
       uses: actions/download-artifact@v4
       with: 
@@ -116,11 +119,6 @@ jobs:
       with:
         name: image_replacer 
 
-    - name: Download secrets
-      uses: actions/download-artifact@v4
-      with:
-        name: secrets_yaml
-
     - name: Deploy to VPS
       env:
         VPS_USER: ${{ secrets.VPS_USER }}
@@ -132,18 +130,39 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H $VPS_HOST >> ~/.ssh/known_hosts
         
-        # Enters VPS, Removes Go files, exits from VPS
-        ssh -i ~/.ssh/id_rsa $VPS_USER@$VPS_HOST "cd ~/repetition/go/ && rm -r ./* && exit;"
-       
-        # Deploy the built Go program to your VPS
+        # Each deploy goes into its own release folder; ~/repetition/go is a
+        # symlink switched to it in one step, so jobs never see a half-copied
+        # folder. To roll back on the server:
+        #   cd ~/repetition && ln -sfn releases/<previous> go.new && mv -Tf go.new go \
+        #     && sudo systemctl restart ktor.service
+        RELEASE="${GITHUB_SHA::12}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+        ssh -i ~/.ssh/id_rsa $VPS_USER@$VPS_HOST "mkdir -p repetition/releases/$RELEASE"
+
         scp -p -i ~/.ssh/id_rsa \
         ./updater \
         ./notifier \
         ./initializer \
         ./bot \
         ./image-replacer \
-        ./secrets.yaml \
-        "$VPS_USER@$VPS_HOST:~/repetition/go/"
+        ./src/secrets.yaml \
+        "$VPS_USER@$VPS_HOST:repetition/releases/$RELEASE/"
 
-        ssh -i ~/.ssh/id_rsa $VPS_USER@$VPS_HOST "cd ./repetition/go/ && sudo chmod +x ./* && sudo systemctl stop ktor.service && sudo systemctl start ktor.service" 
-        
+        ssh -i ~/.ssh/id_rsa $VPS_USER@$VPS_HOST bash -s -- "$RELEASE" <<'REMOTE'
+        set -euo pipefail
+        RELEASE="$1"
+        cd ~/repetition
+        chmod +x releases/$RELEASE/updater releases/$RELEASE/notifier releases/$RELEASE/initializer releases/$RELEASE/bot releases/$RELEASE/image-replacer
+
+        # One-time migration: the old deploys used a plain folder.
+        if [ -d go ] && [ ! -L go ]; then
+          mv go "releases/pre-symlink-$(date +%Y%m%d%H%M%S)"
+        fi
+
+        ln -sfn "releases/$RELEASE" go.new
+        mv -Tf go.new go
+        sudo systemctl restart ktor.service
+
+        # Keep the 5 most recent releases for rollback.
+        ls -1dt releases/*/ | tail -n +6 | xargs -r rm -rf
+        REMOTE

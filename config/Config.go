@@ -22,6 +22,9 @@ type Conf struct {
 	Telegram struct {
 		ApiKey string `yaml:"api_key"`
 		ChatId string `yaml:"chat_id"`
+		// WebhookSecret must match the secret_token given to Telegram's
+		// setWebhook. Leave empty to accept webhook calls without checking.
+		WebhookSecret string `yaml:"webhook_secret"`
 	} `yaml:"telegram"`
 }
 
@@ -47,6 +50,10 @@ func GreekPassiveVocabularyId() string {
 
 func TelegramApiKey() string {
 	return NewConfigFromFile().Telegram.ApiKey
+}
+
+func TelegramWebhookSecret() string {
+	return NewConfigFromFile().Telegram.WebhookSecret
 }
 
 func TelegramChatId() int64 {

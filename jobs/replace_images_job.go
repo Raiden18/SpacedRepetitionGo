@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"spacedrepetitiongo/flashcard"
 	"spacedrepetitiongo/image"
+	"spacedrepetitiongo/schema"
 	"spacedrepetitiongo/utils"
 	"strings"
 
@@ -18,25 +19,24 @@ import (
 
 func ReplaceImages() {
 	db := utils.OpenDb()
+	defer db.Close()
+	schema.Ensure(db)
 	client := resty.New()
 	imagesFolder := "/root/repetition/images/"
 	image.CreateFolderIfNotExist(imagesFolder)
 	cache := image.LoadImageCache(imagesFolder)
 
-	flashCardsToRevise := utils.Filter(
-		flashcard.NewFlashcardsFromDb(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE),
-		flashcard.HasImage,
-	)
-	flashCardsToMemorize := utils.Filter(
-		flashcard.NewFlashcardsFromDb(db, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE),
-		flashcard.HasImage,
-	)
+	hasAnyImage := func(f flashcard.Flashcard) bool { return f.HasImage() || f.HasImageSource() }
+	cardsWithImages := utils.Filter(flashcard.LoadAll(db), hasAnyImage)
 
-	allFlashCards := append(flashCardsToMemorize, flashCardsToRevise...)
+	// Keep the files of every card that has an image, including rows synced
+	// before image_source existed; only cards with a known source are downloaded.
 	keepBaseNames := map[string]struct{}{}
-	for _, f := range allFlashCards {
+	for _, f := range cardsWithImages {
 		keepBaseNames[f.Id] = struct{}{}
 	}
+
+	allFlashCards := utils.Filter(cardsWithImages, func(f flashcard.Flashcard) bool { return f.HasImageSource() })
 
 	image.DeleteFilesNotInSet(imagesFolder, keepBaseNames)
 	for key := range cache.Entries {
@@ -65,26 +65,16 @@ func ReplaceImages() {
 
 	image.SaveImageCache(imagesFolder, cache)
 
-	utils.ForEach(
-		flashCardsToRevise,
-		func(f flashcard.Flashcard) {
-			updateImagesInDb(db, f, flashcard.FLASH_CARDS_TO_REVISE_TABLE, imagesFolder)
-		},
-	)
-
-	utils.ForEach(
-		flashCardsToMemorize,
-		func(f flashcard.Flashcard) {
-			updateImagesInDb(db, f, flashcard.FLASH_CARDS_TO_MEMORIZE_TABLE, imagesFolder)
-		},
-	)
+	for _, f := range allFlashCards {
+		updateImagesInDb(db, f, imagesFolder)
+	}
 }
 
 const fallbackImageURL = "https://img.freepik.com/free-vector/hand-drawn-404-error_23-2147746234.jpg"
 
 func downloadImage(client *resty.Client, url, folder, baseFilename string, cache *image.ImageCache) {
 	entry, hasEntry := cache.Entries[baseFilename]
-	if hasEntry && entry.URL != "" && entry.URL != url {
+	if hasEntry && entry.URL != "" && !image.SameSource(entry.URL, url) {
 		hasEntry = false
 		entry = image.ImageCacheEntry{}
 		delete(cache.Entries, baseFilename)
@@ -214,7 +204,7 @@ func downloadImage(client *resty.Client, url, folder, baseFilename string, cache
 
 func downloadImages(client *resty.Client, folder string, flashcard []flashcard.Flashcard, cache *image.ImageCache) {
 	for _, flashcardWithOldImage := range flashcard {
-		originalUrl := *flashcardWithOldImage.Image
+		originalUrl := *flashcardWithOldImage.ImageSource
 		if strings.Contains(originalUrl, "base64") {
 			sourceHash := image.BytesSHA256([]byte(originalUrl))
 			if entry, ok := cache.Entries[flashcardWithOldImage.Id]; ok && entry.SourceHash == sourceHash {
@@ -248,14 +238,14 @@ func downloadImages(client *resty.Client, folder string, flashcard []flashcard.F
 	}
 }
 
-func updateImagesInDb(db sqlx.DB, flashcard flashcard.Flashcard, tableName string, folder string) {
-	fileName, error := image.FindFileByNameWithoutExt(folder, flashcard.Id)
+func updateImagesInDb(db sqlx.DB, card flashcard.Flashcard, folder string) {
+	fileName, error := image.FindFileByNameWithoutExt(folder, card.Id)
 	if error != nil {
-		log.Println("ORIGINAL: " + *flashcard.Image)
+		log.Println("ORIGINAL: " + *card.ImageSource)
 		log.Println(error)
 		return
 	}
-	flashcard.UpdateImage(db, tableName, fileName)
+	flashcard.UpdateImage(db, card.Id, fileName)
 }
 
 func updateCacheEntriesAfterConversion(cache *image.ImageCache, folder string) {

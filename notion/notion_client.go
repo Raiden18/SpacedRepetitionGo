@@ -2,11 +2,14 @@ package notion
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"spacedrepetitiongo/config"
 
 	notionApi "github.com/jomei/notionapi"
 )
+
+// Notion returns at most this many results per query page.
+const maxPageSize = 100
 
 type Client struct {
 	ClientImpl *notionApi.Client
@@ -22,35 +25,49 @@ func NewClient() Client {
 	}
 }
 
-func (client Client) FetchDataBase(id string) *notionApi.Database {
-	db, error := client.ClientImpl.Database.Get(
+func (client Client) FetchDataBase(id string) (*notionApi.Database, error) {
+	db, err := client.ClientImpl.Database.Get(
 		context.Background(),
 		notionApi.DatabaseID(id),
-	)
-	if error != nil {
-		log.Println("Could not get Notiod Database: "+id, error)
-	}
-
-	return db
-}
-
-func (client Client) FetchPagesFromDb(id string, request *notionApi.DatabaseQueryRequest) []notionApi.Page {
-	pages, err := client.ClientImpl.Database.Query(
-		context.Background(),
-		notionApi.DatabaseID(id),
-		request,
 	)
 	if err != nil {
-		log.Println("Could not get pages from DB: "+id, err)
+		return nil, fmt.Errorf("get Notion database %s: %w", id, err)
 	}
-	return pages.Results
+	return db, nil
 }
 
-func (client Client) UpdatePage(id string, updateRequest *notionApi.PageUpdateRequest) {
-	pageId := notionApi.PageID(id)
+// FetchPagesFromDb returns every page matching the request, following
+// Notion's pagination until has_more is false. It returns an error rather
+// than a partial result, so callers never mistake a truncated list for the
+// full one.
+func (client Client) FetchPagesFromDb(id string, request *notionApi.DatabaseQueryRequest) ([]notionApi.Page, error) {
+	// Copy so the caller's request (shared across goroutines) is not mutated.
+	query := *request
+	query.PageSize = maxPageSize
+	query.StartCursor = ""
 
-	_, error := client.ClientImpl.Page.Update(context.Background(), pageId, updateRequest)
-	if error != nil {
-		log.Println("Could not update Page", error)
+	pages := []notionApi.Page{}
+	for {
+		response, err := client.ClientImpl.Database.Query(
+			context.Background(),
+			notionApi.DatabaseID(id),
+			&query,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("query Notion database %s: %w", id, err)
+		}
+		pages = append(pages, response.Results...)
+		if !response.HasMore || response.NextCursor == "" {
+			return pages, nil
+		}
+		query.StartCursor = response.NextCursor
 	}
+}
+
+func (client Client) UpdatePage(id string, updateRequest *notionApi.PageUpdateRequest) error {
+	_, err := client.ClientImpl.Page.Update(context.Background(), notionApi.PageID(id), updateRequest)
+	if err != nil {
+		return fmt.Errorf("update Notion page %s: %w", id, err)
+	}
+	return nil
 }
