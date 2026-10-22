@@ -34,7 +34,7 @@ func createButtons() map[string]ButtonCallbackFunc {
 		flashcard.RecalledFlashcardKey():  onRecallButtonOfFlashCardClicked,
 		flashcard.NextFlashCardKey():      onShowCardButtonClicked,
 		flashcard.PreviousFlashCardKey():  onShowCardButtonClicked,
-		flashcard.FinishKey():             onFinishedMemorizingButtonClicked,
+		flashcard.FinishKey():             onFinishButtonClicked,
 		flashcard.MemorizedFlashCardKey(): onMemorizedButtonOfFlashcardClicked,
 		flashcard.EndKey():                onToEndClicked,
 		flashcard.BeginingKey():           onToBeginingClicked,
@@ -153,7 +153,7 @@ func onMemorizedButtonOfFlashcardClicked(update tgbotapi.Update, bot telegram.Bo
 	}
 }
 
-func onFinishedMemorizingButtonClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
+func onFinishButtonClicked(update tgbotapi.Update, bot telegram.Bot, db sqlx.DB, client notion.Client) {
 	bot.DeleteMessage(messageId(update))
 }
 
