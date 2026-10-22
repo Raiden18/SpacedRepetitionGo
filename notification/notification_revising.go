@@ -24,7 +24,7 @@ func NewEmptyRevisingNotification() RevisingNotification {
 func NewRevisingNotificationFromDB(db sqlx.DB) RevisingNotification {
 	return NewRevisingNotification(
 		box.NewBoxesFromDb(db),
-		flashcard.NewFlashcardsFromDb(db, flashcard.FLASH_CARDS_TO_REVISE_TABLE),
+		flashcard.LoadQueue(db, flashcard.QueueRevise),
 	)
 }
 

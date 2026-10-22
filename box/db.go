@@ -20,14 +20,14 @@ func NewBoxesFromDb(db sqlx.DB) []Box {
 func CreateTableIfNotExist(db sqlx.DB) {
 	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS ` + BOX_TABLE_NAME + ` (id VARCHAR(255) NOT NULL PRIMARY KEY,text TEXT);`)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }
 
 func ClearTable(db sqlx.DB) {
 	_, err := db.Exec(`DELETE FROM ` + BOX_TABLE_NAME)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }
 
@@ -43,6 +43,6 @@ func insertBox(db sqlx.DB, box Box) {
 		box,
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }

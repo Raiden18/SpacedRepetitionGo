@@ -15,8 +15,7 @@ type CommandCallbackFunc func(update *tgbotapi.Message, bot telegram.Bot, db sql
 
 func CreateCommands() map[string]CommandCallbackFunc {
 	return map[string]CommandCallbackFunc{
-		"update":             updateDataBases,
-		"greek_active_vocab": generateGreekActiveVocabulary,
+		"update": updateDataBases,
 	}
 }
 
@@ -28,8 +27,4 @@ func updateDataBases(message *tgbotapi.Message, bot telegram.Bot, db sqlx.DB, cl
 	bot.DeleteMessage(
 		message.MessageID,
 	)
-}
-
-func generateGreekActiveVocabulary(message *tgbotapi.Message, tg telegram.Bot, db sqlx.DB, client notion.Client) {
-	SaveState(db, NewAddGreekVocabularyState())
 }

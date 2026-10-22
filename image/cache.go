@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const cacheFileName = ".image-cache.json"
@@ -87,4 +88,21 @@ func FileSHA256(path string) (string, error) {
 func BytesSHA256(data []byte) string {
 	h := sha256.Sum256(data)
 	return hex.EncodeToString(h[:])
+}
+
+// SameSource reports whether two image URLs point at the same image. Notion
+// re-signs uploaded files on every fetch, so the query string (signature,
+// expiry) is ignored. Inline data: URLs are compared in full.
+func SameSource(a, b string) bool {
+	return sourceKey(a) == sourceKey(b)
+}
+
+func sourceKey(source string) string {
+	if strings.HasPrefix(source, "data:") {
+		return source
+	}
+	if i := strings.IndexAny(source, "?#"); i != -1 {
+		return source[:i]
+	}
+	return source
 }

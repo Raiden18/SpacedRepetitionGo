@@ -2,10 +2,7 @@ package flashcard
 
 import (
 	"sort"
-	"spacedrepetitiongo/notion"
 	"spacedrepetitiongo/telegram"
-
-	"github.com/jmoiron/sqlx"
 )
 
 var (
@@ -14,52 +11,25 @@ var (
 )
 
 type Flashcard struct {
-	Id          string
-	Image       *string
+	Id string
+	// Image is what the bot sends: a local file path once the image job has
+	// downloaded it, or the remote URL until then.
+	Image *string
+	// ImageSource is the cover URL as it currently is in Notion.
+	ImageSource *string
 	BoxId       string
 	Name        string
 	Example     *string
 	Explanation *string
-	Next        *string
-	Previous    *string
-	KnowLevels  map[int]*bool
-}
-
-func NewMemorizingFlashcardFromDb(db sqlx.DB, id string) *Flashcard {
-	flashCard := GetFromDdById(db, id, FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-	return flashCard
-}
-
-func NewRevisingFlashcardcFromDbById(db sqlx.DB, id string) *Flashcard {
-	return GetFromDdById(db, id, FLASH_CARDS_TO_REVISE_TABLE)
-}
-
-func NewRevisingFlashcardFromDbByBoxId(db sqlx.DB, boxId string) *Flashcard {
-	if CountInDb(db, boxId, FLASH_CARDS_TO_REVISE_TABLE) > 0 {
-		flashcard := GetFormBox(db, boxId, FLASH_CARDS_TO_REVISE_TABLE)
-		return &flashcard
-	} else {
-		return nil
-	}
-}
-
-func NewMemorizingFlashcardFromDbByBoxId(db sqlx.DB, boxId string) *Flashcard {
-	if CountInDb(db, boxId, FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE) > 0 {
-		flashcard := GetFormBox(db, boxId, FLASH_CARDS_TO_MEMORIZE_IN_PROCESS_TABLE)
-		return &flashcard
-	} else {
-		return nil
-	}
-}
-
-func (flashcard Flashcard) RemoveFrom(db sqlx.DB, tableName string) Flashcard {
-	flashcard.RemoveFromDb(db, tableName)
-	return flashcard
-}
-
-func (flashcard Flashcard) UpdateOnNotion(client notion.Client) Flashcard {
-	go func() { flashcard.UpdatePageOnNotion(client) }()
-	return flashcard
+	// Queue is QueueRevise or QueueMemorize; Position orders the box's cards
+	// within the queue.
+	Queue    string
+	Position int
+	// Previous and Next are the neighbouring cards' ids, filled in when the
+	// card is loaded for display.
+	Next       *string
+	Previous   *string
+	KnowLevels map[int]*bool
 }
 
 func (flashcard Flashcard) RemoveFromChat(bot telegram.Bot, id int) Flashcard {
@@ -67,9 +37,17 @@ func (flashcard Flashcard) RemoveFromChat(bot telegram.Bot, id int) Flashcard {
 	return flashcard
 }
 
-func (flashcard Flashcard) InsertInto(db sqlx.DB, tableName string) Flashcard {
-	InsertIntoDB(db, []Flashcard{flashcard}, tableName)
-	return flashcard
+// SendToTelegram sends the card with the buttons for its queue. A nil card
+// sends nothing.
+func (flashcard *Flashcard) SendToTelegram(bot telegram.Bot) {
+	if flashcard == nil {
+		return
+	}
+	if flashcard.Queue == QueueMemorize {
+		flashcard.ToTelegramMessageToMemorize().SendToTelegram(bot)
+	} else {
+		flashcard.ToTelegramMessageToRevise().SendToTelegram(bot)
+	}
 }
 
 func (flashcard *Flashcard) ToTelegramMessageToRevise() *FlashcardTelegramMessageToRevise {
@@ -102,6 +80,10 @@ func (flashcard Flashcard) HasImage() bool {
 
 func HasImage(flashcard Flashcard) bool {
 	return flashcard.HasImage()
+}
+
+func (flashcard Flashcard) HasImageSource() bool {
+	return flashcard.ImageSource != nil && *flashcard.ImageSource != ""
 }
 
 func (flashcard Flashcard) Recall() Flashcard {

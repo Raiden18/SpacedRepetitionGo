@@ -14,7 +14,7 @@ func GetSentMessageId(db sqlx.DB, tableName string) *int {
 	var messages = []*MessageId{}
 	error := db.Select(&messages, `SELECT * FROM `+tableName)
 	if error != nil {
-		log.Fatal(error)
+		log.Panic(error)
 	}
 	if len(messages) == 0 {
 		return nil
@@ -29,14 +29,14 @@ func InsertIntoDb(db sqlx.DB, id int, tableName string) {
 	}
 	_, err := db.NamedExec(query, &messageId)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }
 
 func DeleteFromDb(db sqlx.DB, id int, tableName string) {
 	_, err := db.Exec(`DELETE FROM ` + tableName)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }
 
@@ -47,6 +47,6 @@ func CreateTableIfNotExist(db sqlx.DB, tableName string) {
     	);
 	`)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }
